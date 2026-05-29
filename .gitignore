@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────
+# ENVIRONNEMENT PYTHON
+# ─────────────────────────────────────────
+
+# Virtual environment — chaque dev crée le sien localement
+venv/
+
+# Fichiers compilés Python — générés automatiquement
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ─────────────────────────────────────────
+# VARIABLES D'ENVIRONNEMENT
+# ─────────────────────────────────────────
+
+# Contient les mots de passe — ne JAMAIS pousser sur GitHub
+.env
+
+# ─────────────────────────────────────────
+# BASE DE DONNÉES
+# ─────────────────────────────────────────
+*.sqlite3
+*.db
+
+# ─────────────────────────────────────────
+# VS CODE
+# ─────────────────────────────────────────
+.vscode/
+*.code-workspace
+
+# ─────────────────────────────────────────
+# SYSTÈME
+# ─────────────────────────────────────────
+.DS_Store
+Thumbs.db

@@ -1,0 +1,54 @@
+# database.py
+# Configuration de la connexion à PostgreSQL via SQLAlchemy
+# Ce fichier est le point central de toute interaction avec la base de données.
+
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+import os
+
+
+
+# Charge les variables d'environnement depuis le fichier .env
+# DATABASE_URL doit y être défini : postgresql://user:password@host:port/swim_ai_db
+load_dotenv()
+
+# Récupération de l'URL de connexion — jamais en dur dans le code
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Moteur SQLAlchemy — gère le pool de connexions vers PostgreSQL
+# pool_pre_ping=True : vérifie que la connexion est vivante avant chaque requête
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+
+# Fabrique de sessions — chaque requête HTTP aura sa propre session
+# autocommit=False : les transactions sont validées manuellement (plus sûr)
+# autoflush=False  : on contrôle l'envoi des données vers la BDD
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+# Base commune à tous les modèles SQLAlchemy (importée dans models.py)
+Base = declarative_base()
+
+
+def get_db():
+    """
+    Générateur de session de base de données — injecté dans les routes FastAPI
+    via Depends(get_db).
+
+    Garantit que la session est toujours fermée après chaque requête,
+    même en cas d'erreur (bloc finally).
+
+    Usage dans une route :
+        @app.get("/nageurs")
+        def get_nageurs(db: Session = Depends(get_db)):
+            return db.query(Nageur).all()
+    """
+    db = SessionLocal()
+    try:
+        yield db       # fournit la session à la route
+    finally:
+        db.close()     # fermeture garantie dans tous les cas
