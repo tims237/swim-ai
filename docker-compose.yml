@@ -1,0 +1,121 @@
+# docker-compose.yml
+# Orchestre les 3 services de Swim AI :
+# - backend  : FastAPI + Python
+# - db       : PostgreSQL
+# - grafana  : Dashboard monitoring type Kibana
+#
+# Commande de démarrage : docker-compose up
+# Commande d'arrêt     : docker-compose down
+
+services:
+
+  # ─────────────────────────────────────────
+  # SERVICE 1 — Backend FastAPI
+  # ─────────────────────────────────────────
+  backend:
+    # Construit l'image depuis le Dockerfile dans backend/
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+
+    container_name: swim_ai_backend
+
+    # Mappe le port local 8000 sur le port 8000 du conteneur
+    # Accessible sur : http://localhost:8000
+    ports:
+      - "8000:8000"
+
+   
+
+    environment:
+      # "db" = nom du service PostgreSQL ci-dessous
+      # Docker résout automatiquement "db" en adresse IP interne
+      # Important : utiliser "db" et non "localhost" dans Docker
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/swim_ai_db
+
+    # Attend que PostgreSQL soit prêt avant de démarrer FastAPI
+    depends_on:
+      db:
+        condition: service_healthy
+
+    # Monte le code local dans le conteneur
+    # Permet le rechargement automatique sans rebuilder l'image
+    volumes:
+      - ./backend:/app
+
+    # Redémarre automatiquement en cas de crash
+    restart: always
+
+
+  # ─────────────────────────────────────────
+  # SERVICE 2 — Base de données PostgreSQL
+  # ─────────────────────────────────────────
+  db:
+    # Image officielle PostgreSQL — pas besoin de Dockerfile
+    image: postgres:15
+
+    container_name: swim_ai_db
+
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # lu depuis .env
+      POSTGRES_DB: swim_ai_db                  # crée la BDD au démarrage
+
+    # Accessible depuis pgAdmin local sur le port 5432
+    ports:
+      - "5433:5432"
+
+    # Persiste les données même si le conteneur est arrêté ou supprimé
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    # Vérifie que PostgreSQL est prêt avant de démarrer le backend
+    # interval : vérifie toutes les 5 secondes
+    # retries  : essaie 5 fois avant d'échouer
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    restart: always
+
+
+  # ─────────────────────────────────────────
+  # SERVICE 3 — Grafana (dashboard type Kibana)
+  # Accessible sur : http://localhost:3001
+  # Login : admin / valeur de GRAFANA_PASSWORD dans .env
+  # ─────────────────────────────────────────
+  grafana:
+    # Image officielle Grafana — pas besoin de Dockerfile
+    image: grafana/grafana:latest
+
+    container_name: swim_ai_grafana
+
+    # Port local 3001 → port 3000 du conteneur Grafana
+    # On utilise 3001 pour ne pas entrer en conflit avec React (3000)
+    ports:
+      - "3001:3000"
+
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}  # lu depuis .env
+
+    # Persiste les dashboards et la configuration Grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+    # Attend que PostgreSQL soit disponible
+    depends_on:
+      - db
+
+    restart: always
+
+
+# ─────────────────────────────────────────
+# VOLUMES — Persistance des données
+# Gérés par Docker — indépendants du système de fichiers local
+# ─────────────────────────────────────────
+volumes:
+  postgres_data:   # données PostgreSQL — conservées entre les redémarrages
+  grafana_data:    # dashboards et config Grafana — conservés entre les redémarrages
