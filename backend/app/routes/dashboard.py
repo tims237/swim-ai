@@ -361,3 +361,4 @@ def get_dashboard(nageur_id: int, db: Session = Depends(get_db)):
         historique_chronos = historique_chronos,
         recommandations    = recommandations
     )
+

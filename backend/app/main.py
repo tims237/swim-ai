@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # 2. Imports locaux
 from app import models
 from app.database import engine, Base
-from app.routes import nageurs, sessions, biometries, performances
+from app.routes import nageurs, sessions, biometries, performances, dashboard, equipe
 
 # Création de l'instance FastAPI — une seule fois
 # title : affiché dans la documentation Swagger (http://127.0.0.1:8000/docs)
@@ -33,6 +33,8 @@ app.include_router(nageurs.router)
 app.include_router(sessions.router)
 app.include_router(biometries.router)
 app.include_router(performances.router)
+app.include_router(dashboard.router)
+app.include_router(equipe.router)  # route équipe entraîneur   
 
 
 @app.get("/")
