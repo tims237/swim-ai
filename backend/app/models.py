@@ -103,3 +103,37 @@ class Performance(Base):
 
     # Relation ORM
     session = relationship("Session", back_populates="performances")
+
+class Utilisateur(Base):
+    """
+    Table des utilisateurs — gère l'authentification et les rôles.
+    Séparée de la table nageurs car un utilisateur peut être :
+    - un nageur (lié à un profil nageur)
+    - un entraîneur (accès à toute l'équipe)
+    - un admin (accès total)
+    """
+    __tablename__ = "utilisateurs"
+
+    # Clé primaire
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Identifiants de connexion
+    email        = Column(String, unique=True, nullable=False, index=True)  # identifiant unique
+    mot_de_passe = Column(String, nullable=False)  # hash bcrypt — jamais en clair
+
+    # Rôle — détermine les accès dans l'application
+    # "nageur"      → accès à ses propres données uniquement
+    # "entraineur"  → accès à toute l'équipe
+    # "admin"       → accès total
+    role = Column(String, nullable=False, default="nageur")
+
+    # Lien optionnel vers la table nageurs
+    # Rempli si l'utilisateur est un nageur
+    # None si l'utilisateur est un entraîneur ou admin
+    nageur_id = Column(Integer, ForeignKey("nageurs.id", ondelete="SET NULL"), nullable=True)
+
+    # Statut du compte — permet de désactiver sans supprimer
+    actif = Column(String, nullable=False, default="true")
+
+    # Relation ORM vers le profil nageur
+    nageur = relationship("Nageur", backref="utilisateur")

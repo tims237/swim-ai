@@ -1,24 +1,20 @@
 # routes/nageurs.py
 # Endpoints CRUD pour la gestion des nageurs
-# Toutes les routes liées aux nageurs sont regroupées ici
+# Routes protégées par JWT — token requis pour toutes les opérations
 
+# 1. Bibliothèques standard
+from typing import List
+
+# 2. Bibliothèques tierces
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-# Import de la session BDD — injectée automatiquement via Depends
+# 3. Imports locaux
+from app.auth.dependencies import get_current_user, get_current_admin
 from app.database import get_db
-
-# Import du modèle SQLAlchemy — représente la table nageurs
-from app.models import Nageur
-
-# Import des schémas Pydantic — validation des données entrantes et sortantes
+from app.models import Nageur, Utilisateur
 from app.schemas import NageurCreate, NageurResponse
 
-from typing import List
-
-# APIRouter — equivalent de app mais pour un groupe de routes
-# prefix : toutes les routes de ce fichier commenceront par /nageurs
-# tags   : groupe les routes dans la documentation Swagger
 router = APIRouter(
     prefix="/nageurs",
     tags=["Nageurs"]
@@ -27,12 +23,18 @@ router = APIRouter(
 
 # ─────────────────────────────────────────
 # POST /nageurs — Créer un nageur
+# Accessible : entraîneur et admin uniquement
 # ─────────────────────────────────────────
 
 @router.post("/", response_model=NageurResponse, status_code=status.HTTP_201_CREATED)
-def creer_nageur(nageur: NageurCreate, db: Session = Depends(get_db)):
+def creer_nageur(
+    nageur: NageurCreate,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
     """
     Crée un nouveau nageur dans la base de données.
+    Route protégée — token JWT requis.
 
     - **nom** : obligatoire
     - **prenom** : obligatoire
@@ -41,6 +43,13 @@ def creer_nageur(nageur: NageurCreate, db: Session = Depends(get_db)):
     - **niveau** : optionnel (ex: national, régional)
     """
 
+    # Seuls les entraîneurs et admins peuvent créer des nageurs
+    if current_user.role not in ["entraineur", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seuls les entraîneurs peuvent créer des nageurs"
+        )
+
     # Vérifie si un nageur avec le même nom et prénom existe déjà
     nageur_existant = db.query(Nageur).filter(
         Nageur.nom == nageur.nom,
@@ -48,24 +57,16 @@ def creer_nageur(nageur: NageurCreate, db: Session = Depends(get_db)):
     ).first()
 
     if nageur_existant:
-        # HTTP 400 — la requête est invalide (doublon détecté)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Un nageur {nageur.nom} {nageur.prenom} existe déjà"
         )
 
     # Convertit le schéma Pydantic en objet SQLAlchemy
-    # model_dump() transforme NageurCreate en dictionnaire Python
     nouveau_nageur = Nageur(**nageur.model_dump())
 
-    # Ajoute l'objet à la session SQLAlchemy (pas encore en BDD)
     db.add(nouveau_nageur)
-
-    # Sauvegarde définitivement dans PostgreSQL
-    # C'est ici que l'id est généré par PostgreSQL
     db.commit()
-
-    # Rafraîchit l'objet pour récupérer l'id généré
     db.refresh(nouveau_nageur)
 
     return nouveau_nageur
@@ -73,35 +74,39 @@ def creer_nageur(nageur: NageurCreate, db: Session = Depends(get_db)):
 
 # ─────────────────────────────────────────
 # GET /nageurs — Liste tous les nageurs
+# Accessible : tous les utilisateurs connectés
 # ─────────────────────────────────────────
 
 @router.get("/", response_model=List[NageurResponse])
-def get_nageurs(db: Session = Depends(get_db)):
+def get_nageurs(
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
     """
     Retourne la liste de tous les nageurs enregistrés.
+    Route protégée — token JWT requis.
     """
-
-    # Récupère tous les nageurs dans la table
-    nageurs = db.query(Nageur).all()
-
-    return nageurs
+    return db.query(Nageur).all()
 
 
 # ─────────────────────────────────────────
 # GET /nageurs/{id} — Détail d'un nageur
+# Accessible : tous les utilisateurs connectés
 # ─────────────────────────────────────────
 
 @router.get("/{nageur_id}", response_model=NageurResponse)
-def get_nageur(nageur_id: int, db: Session = Depends(get_db)):
+def get_nageur(
+    nageur_id: int,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
     """
     Retourne le détail d'un nageur par son id.
+    Route protégée — token JWT requis.
     Retourne une erreur 404 si le nageur n'existe pas.
     """
-
-    # Recherche le nageur par son id
     nageur = db.query(Nageur).filter(Nageur.id == nageur_id).first()
 
-    # Si aucun nageur trouvé — HTTP 404
     if not nageur:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -113,17 +118,21 @@ def get_nageur(nageur_id: int, db: Session = Depends(get_db)):
 
 # ─────────────────────────────────────────
 # DELETE /nageurs/{id} — Supprimer un nageur
+# Accessible : admin uniquement
 # ─────────────────────────────────────────
 
 @router.delete("/{nageur_id}", status_code=status.HTTP_204_NO_CONTENT)
-def supprimer_nageur(nageur_id: int, db: Session = Depends(get_db)):
+def supprimer_nageur(
+    nageur_id: int,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_admin)
+    # get_current_admin → vérifie automatiquement que l'utilisateur est admin
+):
     """
     Supprime un nageur et toutes ses données associées.
-    (sessions, biométries, performances — grâce au CASCADE)
-    Retourne 204 No Content si la suppression est réussie.
+    Route protégée — réservée aux administrateurs.
+    (sessions, biométries, performances supprimées par CASCADE)
     """
-
-    # Vérifie que le nageur existe avant de supprimer
     nageur = db.query(Nageur).filter(Nageur.id == nageur_id).first()
 
     if not nageur:
@@ -132,7 +141,5 @@ def supprimer_nageur(nageur_id: int, db: Session = Depends(get_db)):
             detail=f"Nageur avec l'id {nageur_id} introuvable"
         )
 
-    # Supprime le nageur — le CASCADE supprime automatiquement
-    # toutes ses sessions, biométries et performances
     db.delete(nageur)
     db.commit()

@@ -1,6 +1,6 @@
 # routes/equipe.py
 # Endpoints dashboard entraîneur — vue agrégée de toute l'équipe
-# Séparé de dashboard.py pour une meilleure lisibilité et maintenabilité
+# Routes protégées par JWT — réservées aux entraîneurs et admins
 
 # 1. Bibliothèques standard
 from typing import List, Optional
@@ -11,11 +11,10 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 # 3. Imports locaux
+from app.auth.dependencies import get_current_entraineur
 from app.database import get_db
-from app.models import Biometrie, Nageur, Performance
+from app.models import Biometrie, Nageur, Performance, Utilisateur
 from app.models import Session as SessionModel
-
-# Réutilise les fonctions de calcul déjà définies dans dashboard.py
 from app.routes.dashboard import calculer_kpi, calculer_charge
 
 router = APIRouter(
@@ -25,7 +24,7 @@ router = APIRouter(
 
 
 # ─────────────────────────────────────────
-# SCHÉMAS — Dashboard équipe
+# SCHÉMAS
 # ─────────────────────────────────────────
 
 class NageurEquipe(BaseModel):
@@ -34,11 +33,11 @@ class NageurEquipe(BaseModel):
     nom            : str
     prenom         : str
     specialite     : Optional[str]   = None
-    dernier_chrono : Optional[float] = None  # dernier chrono en secondes
-    acwr           : Optional[float] = None  # ratio charge aiguë/chronique
-    hrv_moyenne    : Optional[float] = None  # HRV moyenne 7 jours
-    fatigue        : Optional[int]   = None  # score fatigue 0-100
-    statut         : str = "inconnu"         # optimal/surveiller/fatigue/surmenage
+    dernier_chrono : Optional[float] = None
+    acwr           : Optional[float] = None
+    hrv_moyenne    : Optional[float] = None
+    fatigue        : Optional[int]   = None
+    statut         : str = "inconnu"
 
     class Config:
         from_attributes = True
@@ -49,9 +48,9 @@ class AlerteEquipe(BaseModel):
     nageur_id : int
     nom       : str
     prenom    : str
-    type      : str   # "surmenage", "fatigue", "hrv_faible"
-    niveau    : str   # "danger", "warning"
-    message   : str   # description de l'alerte
+    type      : str
+    niveau    : str
+    message   : str
 
 
 class StatsEquipe(BaseModel):
@@ -65,22 +64,19 @@ class StatsEquipe(BaseModel):
 
 
 class DashboardEquipeResponse(BaseModel):
-    """
-    Réponse complète du dashboard entraîneur.
-    Agrège les données de tous les nageurs en un seul appel API.
-    """
+    """Réponse complète du dashboard entraîneur."""
     stats   : StatsEquipe
     alertes : List[AlerteEquipe]
     nageurs : List[NageurEquipe]
 
 
 # ─────────────────────────────────────────
-# FONCTIONS DE CALCUL — Équipe
+# FONCTIONS DE CALCUL
 # ─────────────────────────────────────────
 
 def determiner_statut(fatigue: Optional[int], acwr: Optional[float]) -> str:
     """
-    Détermine le statut de forme d'un nageur à partir de ses KPI.
+    Détermine le statut de forme d'un nageur.
 
     Règles basées sur la littérature sportive :
     - surmenage  : ACWR > 1.5 OU fatigue > 80
@@ -101,10 +97,9 @@ def determiner_statut(fatigue: Optional[int], acwr: Optional[float]) -> str:
 def generer_alertes_equipe(nageurs_data: List[NageurEquipe]) -> List[AlerteEquipe]:
     """
     Génère les alertes prioritaires pour l'entraîneur.
-    Analyse chaque nageur et génère une alerte si nécessaire.
 
     Args:
-        nageurs_data : liste des nageurs avec leurs KPI calculés
+        nageurs_data : nageurs avec leurs KPI calculés
 
     Returns:
         List[AlerteEquipe] : alertes triées par niveau (danger en premier)
@@ -113,7 +108,6 @@ def generer_alertes_equipe(nageurs_data: List[NageurEquipe]) -> List[AlerteEquip
 
     for nageur in nageurs_data:
 
-        # ── Alerte surmenage ─────────────────────
         if nageur.statut == "surmenage":
             alertes.append(AlerteEquipe(
                 nageur_id = nageur.id,
@@ -124,7 +118,6 @@ def generer_alertes_equipe(nageurs_data: List[NageurEquipe]) -> List[AlerteEquip
                 message   = f"ACWR {nageur.acwr} — réduire immédiatement le volume"
             ))
 
-        # ── Alerte fatigue ───────────────────────
         elif nageur.statut == "fatigue":
             alertes.append(AlerteEquipe(
                 nageur_id = nageur.id,
@@ -135,7 +128,6 @@ def generer_alertes_equipe(nageurs_data: List[NageurEquipe]) -> List[AlerteEquip
                 message   = "Fatigue élevée — prévoir une séance de récupération"
             ))
 
-        # ── Alerte HRV faible ────────────────────
         if nageur.hrv_moyenne and nageur.hrv_moyenne < 50:
             alertes.append(AlerteEquipe(
                 nageur_id = nageur.id,
@@ -146,16 +138,14 @@ def generer_alertes_equipe(nageurs_data: List[NageurEquipe]) -> List[AlerteEquip
                 message   = f"HRV critique ({nageur.hrv_moyenne} ms) — système nerveux non récupéré"
             ))
 
-    # Trie les alertes — danger en premier, warning ensuite
     alertes.sort(key=lambda a: 0 if a.niveau == "danger" else 1)
-
     return alertes
 
 
 def construire_nageur_equipe(nageur: Nageur, db: Session) -> NageurEquipe:
     """
     Construit le résumé KPI d'un nageur pour la vue équipe.
-    Réutilise les fonctions calculer_kpi et calculer_charge de dashboard.py.
+    Réutilise calculer_kpi et calculer_charge de dashboard.py.
 
     Args:
         nageur : objet SQLAlchemy Nageur
@@ -164,27 +154,20 @@ def construire_nageur_equipe(nageur: Nageur, db: Session) -> NageurEquipe:
     Returns:
         NageurEquipe : résumé du nageur avec ses KPI
     """
-
-    # Récupère les sessions
     sessions = db.query(SessionModel).filter(
         SessionModel.nageur_id == nageur.id
     ).order_by(SessionModel.date).all()
 
-    # Récupère les performances via jointure
     performances = db.query(Performance).join(SessionModel).filter(
         SessionModel.nageur_id == nageur.id
     ).order_by(SessionModel.date).all()
 
-    # Récupère les biométries
     biometries = db.query(Biometrie).filter(
         Biometrie.nageur_id == nageur.id
     ).order_by(Biometrie.date).all()
 
-    # Calcule les KPI en réutilisant les fonctions de dashboard.py
     kpi    = calculer_kpi(performances, biometries)
     charge = calculer_charge(sessions)
-
-    # Détermine le statut de forme
     statut = determiner_statut(kpi.fatigue, charge.acwr)
 
     return NageurEquipe(
@@ -202,34 +185,28 @@ def construire_nageur_equipe(nageur: Nageur, db: Session) -> NageurEquipe:
 
 # ─────────────────────────────────────────
 # ENDPOINTS
+# Toutes les routes réservées aux entraîneurs et admins
+# get_current_entraineur vérifie automatiquement le rôle
 # ─────────────────────────────────────────
 
 @router.get("/", response_model=DashboardEquipeResponse)
-def get_dashboard_equipe(db: Session = Depends(get_db)):
+def get_dashboard_equipe(
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_entraineur)
+):
     """
     Retourne le dashboard complet pour l'entraîneur.
+    Route protégée — réservée aux entraîneurs et admins.
 
     Agrège en un seul appel :
     - Statistiques globales de l'équipe
     - Alertes prioritaires (surmenage, fatigue, HRV)
-    - KPI de chaque nageur (chrono, ACWR, fatigue, statut)
-
-    Accessible sur : GET /equipe
+    - KPI de chaque nageur
     """
-
-    # Récupère tous les nageurs
     tous_nageurs = db.query(Nageur).all()
+    nageurs_data = [construire_nageur_equipe(n, db) for n in tous_nageurs]
+    alertes      = generer_alertes_equipe(nageurs_data)
 
-    # Construit le résumé KPI pour chaque nageur
-    nageurs_data = [
-        construire_nageur_equipe(nageur, db)
-        for nageur in tous_nageurs
-    ]
-
-    # Génère les alertes
-    alertes = generer_alertes_equipe(nageurs_data)
-
-    # Calcule les stats globales
     stats = StatsEquipe(
         total_nageurs      = len(nageurs_data),
         nageurs_optimaux   = sum(1 for n in nageurs_data if n.statut == "optimal"),
@@ -247,12 +224,13 @@ def get_dashboard_equipe(db: Session = Depends(get_db)):
 
 
 @router.get("/alertes", response_model=List[AlerteEquipe])
-def get_alertes_equipe(db: Session = Depends(get_db)):
+def get_alertes_equipe(
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_entraineur)
+):
     """
     Retourne uniquement les alertes actives de l'équipe.
-    Utile pour les notifications en temps réel dans le frontend.
-
-    Accessible sur : GET /equipe/alertes
+    Route protégée — réservée aux entraîneurs et admins.
     """
     tous_nageurs = db.query(Nageur).all()
     nageurs_data = [construire_nageur_equipe(n, db) for n in tous_nageurs]
@@ -260,12 +238,13 @@ def get_alertes_equipe(db: Session = Depends(get_db)):
 
 
 @router.get("/stats", response_model=StatsEquipe)
-def get_stats_equipe(db: Session = Depends(get_db)):
+def get_stats_equipe(
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_entraineur)
+):
     """
     Retourne uniquement les statistiques globales de l'équipe.
-    Utile pour les KPI cards du dashboard entraîneur.
-
-    Accessible sur : GET /equipe/stats
+    Route protégée — réservée aux entraîneurs et admins.
     """
     tous_nageurs = db.query(Nageur).all()
     nageurs_data = [construire_nageur_equipe(n, db) for n in tous_nageurs]
