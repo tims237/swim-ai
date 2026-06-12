@@ -1,13 +1,19 @@
 # routes/performances.py
 # Endpoints CRUD pour la gestion des performances chronométriques
-# Résultats de nage : chrono, distance, style, vitesse moyenne
+# Routes protégées par JWT — token requis pour toutes les opérations
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+# 1. Bibliothèques standard
 from typing import List
 
+# 2. Bibliothèques tierces
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+# 3. Imports locaux
+from app.auth.dependencies import get_current_user, get_current_admin
 from app.database import get_db
-from app.models import Performance, Session as SessionModel, Nageur
+from app.models import Nageur, Performance, Utilisateur
+from app.models import Session as SessionModel
 from app.schemas import PerformanceCreate, PerformanceResponse
 
 router = APIRouter(
@@ -18,21 +24,27 @@ router = APIRouter(
 
 # ─────────────────────────────────────────
 # POST /performances — Créer une performance
+# Accessible : nageur (ses propres performances) + entraîneur + admin
 # ─────────────────────────────────────────
 
 @router.post("/", response_model=PerformanceResponse, status_code=status.HTTP_201_CREATED)
-def creer_performance(performance: PerformanceCreate, db: Session = Depends(get_db)):
+def creer_performance(
+    performance: PerformanceCreate,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
     """
     Enregistre un résultat chronométrique lors d'une session.
+    Route protégée — token JWT requis.
 
     - **session_id** : obligatoire — id de la session concernée
     - **distance_m** : distance en mètres (50, 100, 200, 400, 800, 1500)
-    - **temps_s** : chrono en secondes (ex: 58.24)
+    - **temps_s**    : chrono en secondes (ex: 58.24)
     - **style_nage** : crawl, dos, brasse, papillon, 4 nages
-    - **vitesse_moy** : vitesse moyenne en m/s
+    - **vitesse_moy**: vitesse moyenne en m/s
     """
 
-    # Vérifie que la session existe avant de créer la performance
+    # Vérifie que la session existe
     session = db.query(SessionModel).filter(
         SessionModel.id == performance.session_id
     ).first()
@@ -43,9 +55,14 @@ def creer_performance(performance: PerformanceCreate, db: Session = Depends(get_
             detail=f"Session avec l'id {performance.session_id} introuvable"
         )
 
-    # Convertit le schéma Pydantic en objet SQLAlchemy
-    nouvelle_performance = Performance(**performance.model_dump())
+    # Un nageur ne peut enregistrer des performances que pour ses propres sessions
+    if current_user.role == "nageur" and session.nageur_id != current_user.nageur_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vous ne pouvez enregistrer des performances que pour vos propres sessions"
+        )
 
+    nouvelle_performance = Performance(**performance.model_dump())
     db.add(nouvelle_performance)
     db.commit()
     db.refresh(nouvelle_performance)
@@ -55,25 +72,43 @@ def creer_performance(performance: PerformanceCreate, db: Session = Depends(get_
 
 # ─────────────────────────────────────────
 # GET /performances — Liste toutes les performances
+# Accessible : tous les utilisateurs connectés
 # ─────────────────────────────────────────
 
 @router.get("/", response_model=List[PerformanceResponse])
-def get_performances(db: Session = Depends(get_db)):
+def get_performances(
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
     """
     Retourne toutes les performances enregistrées.
+    Route protégée — token JWT requis.
+    Un nageur ne voit que ses propres performances.
     """
-    performances = db.query(Performance).all()
-    return performances
+    # Un nageur ne voit que ses propres performances
+    if current_user.role == "nageur":
+        return db.query(Performance).join(SessionModel).filter(
+            SessionModel.nageur_id == current_user.nageur_id
+        ).all()
+
+    # Entraîneur et admin voient toutes les performances
+    return db.query(Performance).all()
 
 
 # ─────────────────────────────────────────
 # GET /performances/{id} — Détail d'une performance
+# Accessible : tous les utilisateurs connectés
 # ─────────────────────────────────────────
 
 @router.get("/{performance_id}", response_model=PerformanceResponse)
-def get_performance(performance_id: int, db: Session = Depends(get_db)):
+def get_performance(
+    performance_id: int,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
     """
     Retourne le détail d'une performance par son id.
+    Route protégée — token JWT requis.
     """
     performance = db.query(Performance).filter(
         Performance.id == performance_id
@@ -85,21 +120,35 @@ def get_performance(performance_id: int, db: Session = Depends(get_db)):
             detail=f"Performance avec l'id {performance_id} introuvable"
         )
 
+    # Un nageur ne peut voir que ses propres performances
+    if current_user.role == "nageur":
+        session = db.query(SessionModel).filter(
+            SessionModel.id == performance.session_id
+        ).first()
+        if session and session.nageur_id != current_user.nageur_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Accès refusé — cette performance ne vous appartient pas"
+            )
+
     return performance
 
 
 # ─────────────────────────────────────────
 # GET /performances/session/{id} — Performances d'une session
+# Accessible : tous les utilisateurs connectés
 # ─────────────────────────────────────────
 
 @router.get("/session/{session_id}", response_model=List[PerformanceResponse])
-def get_performances_session(session_id: int, db: Session = Depends(get_db)):
+def get_performances_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
     """
     Retourne toutes les performances d'une session spécifique.
-    Utile pour voir tous les chronos d'une séance d'entraînement.
+    Route protégée — token JWT requis.
     """
-
-    # Vérifie que la session existe
     session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
     if not session:
         raise HTTPException(
@@ -107,26 +156,42 @@ def get_performances_session(session_id: int, db: Session = Depends(get_db)):
             detail=f"Session avec l'id {session_id} introuvable"
         )
 
-    performances = db.query(Performance).filter(
+    # Un nageur ne peut voir que ses propres sessions
+    if current_user.role == "nageur" and session.nageur_id != current_user.nageur_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès refusé — cette session ne vous appartient pas"
+        )
+
+    return db.query(Performance).filter(
         Performance.session_id == session_id
     ).all()
-
-    return performances
 
 
 # ─────────────────────────────────────────
 # GET /performances/nageur/{id} — Performances d'un nageur
+# Accessible : tous les utilisateurs connectés
 # ─────────────────────────────────────────
 
 @router.get("/nageur/{nageur_id}", response_model=List[PerformanceResponse])
-def get_performances_nageur(nageur_id: int, db: Session = Depends(get_db)):
+def get_performances_nageur(
+    nageur_id: int,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
     """
     Retourne toutes les performances d'un nageur spécifique.
-    Fait une jointure entre performances et sessions pour filtrer par nageur.
-    Utile pour suivre l'évolution des chronos dans le temps.
+    Route protégée — token JWT requis.
+    Jointure performances → sessions pour filtrer par nageur.
     """
 
-    # Vérifie que le nageur existe
+    # Un nageur ne peut voir que ses propres performances
+    if current_user.role == "nageur" and current_user.nageur_id != nageur_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès refusé — vous ne pouvez voir que vos propres performances"
+        )
+
     nageur = db.query(Nageur).filter(Nageur.id == nageur_id).first()
     if not nageur:
         raise HTTPException(
@@ -134,22 +199,25 @@ def get_performances_nageur(nageur_id: int, db: Session = Depends(get_db)):
             detail=f"Nageur avec l'id {nageur_id} introuvable"
         )
 
-    # Jointure performances → sessions pour filtrer par nageur_id
-    performances = db.query(Performance).join(SessionModel).filter(
+    return db.query(Performance).join(SessionModel).filter(
         SessionModel.nageur_id == nageur_id
     ).all()
-
-    return performances
 
 
 # ─────────────────────────────────────────
 # DELETE /performances/{id} — Supprimer une performance
+# Accessible : admin uniquement
 # ─────────────────────────────────────────
 
 @router.delete("/{performance_id}", status_code=status.HTTP_204_NO_CONTENT)
-def supprimer_performance(performance_id: int, db: Session = Depends(get_db)):
+def supprimer_performance(
+    performance_id: int,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_admin)
+):
     """
     Supprime une performance par son id.
+    Route protégée — réservée aux administrateurs.
     """
     performance = db.query(Performance).filter(
         Performance.id == performance_id
