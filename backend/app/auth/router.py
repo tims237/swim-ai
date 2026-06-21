@@ -5,7 +5,6 @@
 # 2. Bibliothèques tierces
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 # 3. Imports locaux
@@ -15,9 +14,15 @@ from app.auth.security import (
     creer_token,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, get_current_admin
 from app.database import get_db
 from app.models import Utilisateur
+from app.schemas import (
+    InscriptionSchema,
+    TokenSchema,
+    UtilisateurResponse,
+    ChangeRoleSchema
+)
 
 router = APIRouter(
     prefix="/auth",
@@ -26,53 +31,33 @@ router = APIRouter(
 
 
 # ─────────────────────────────────────────
-# SCHÉMAS
-# ─────────────────────────────────────────
-
-class InscriptionSchema(BaseModel):
-    """Données nécessaires pour créer un compte."""
-    email        : str   # adresse email — identifiant unique
-    mot_de_passe : str   # mot de passe en clair — hashé avant stockage
-    role         : str = "nageur"  # rôle par défaut : nageur
-    nageur_id    : int = None      # lien optionnel vers un profil nageur
-
-
-class TokenSchema(BaseModel):
-    """Réponse renvoyée après une connexion réussie."""
-    access_token : str   # token JWT à stocker côté frontend
-    token_type   : str   # toujours "bearer" — standard OAuth2
-
-
-class UtilisateurResponse(BaseModel):
-    """Informations de l'utilisateur connecté."""
-    id        : int
-    email     : str
-    role      : str
-    nageur_id : int = None
-    actif     : str
-
-    class Config:
-        from_attributes = True
-
-
-# ─────────────────────────────────────────
 # ENDPOINTS
+# Les schémas (InscriptionSchema, TokenSchema, UtilisateurResponse, ChangeRoleSchema)
+# sont importés depuis app/schemas.py — un seul fichier centralise toute la validation
 # ─────────────────────────────────────────
 
 @router.post("/register", response_model=UtilisateurResponse, status_code=status.HTTP_201_CREATED)
 def inscription(utilisateur: InscriptionSchema, db: Session = Depends(get_db)):
     """
-    Crée un nouveau compte utilisateur.
+    Crée un nouveau compte utilisateur avec le rôle "nageur".
 
     - **email**        : adresse email unique
-    - **mot_de_passe** : mot de passe en clair — hashé avec bcrypt avant stockage
-    - **role**         : nageur (défaut), entraineur ou admin
+    - **mot_de_passe** : mot de passe en clair (min 8 caractères) — hashé avec bcrypt
     - **nageur_id**    : optionnel — lie le compte à un profil nageur existant
 
+    Le rôle est TOUJOURS "nageur" à l'inscription.
+    Seul un admin peut promouvoir un utilisateur via PUT /auth/role/{id}.
     Le mot de passe n'est JAMAIS stocké en clair en base de données.
     """
 
-    # ── 1. Vérifie que l'email n'existe pas déjà ─
+    # ── 1. Valide la longueur du mot de passe ───
+    if len(utilisateur.mot_de_passe) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le mot de passe doit contenir au moins 8 caractères"
+        )
+
+    # ── 2. Vérifie que l'email n'existe pas déjà ─
     email_existant = db.query(Utilisateur).filter(
         Utilisateur.email == utilisateur.email
     ).first()
@@ -83,25 +68,19 @@ def inscription(utilisateur: InscriptionSchema, db: Session = Depends(get_db)):
             detail=f"Un compte avec l'email {utilisateur.email} existe déjà"
         )
 
-    # ── 2. Vérifie que le rôle est valide ────────
-    roles_valides = ["nageur", "entraineur", "admin"]
-    if utilisateur.role not in roles_valides:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Rôle invalide — choisir parmi : {roles_valides}"
-        )
-
     # ── 3. Hashe le mot de passe avec bcrypt ─────
     # Le mot de passe en clair n'est jamais stocké
     hash_mot_de_passe = hasher_mot_de_passe(utilisateur.mot_de_passe)
 
     # ── 4. Crée l'utilisateur en base ────────────
+    # Le rôle est TOUJOURS "nageur" à l'inscription
+    # Seul un admin peut promouvoir un utilisateur (PUT /auth/role)
     nouvel_utilisateur = Utilisateur(
         email        = utilisateur.email,
         mot_de_passe = hash_mot_de_passe,  # hash bcrypt
-        role         = utilisateur.role,
+        role         = "nageur",           # rôle forcé — sécurité
         nageur_id    = utilisateur.nageur_id,
-        actif        = "true"
+        actif        = True
     )
 
     db.add(nouvel_utilisateur)
@@ -151,7 +130,7 @@ def connexion(
         )
 
     # ── 3. Vérifie que le compte est actif ───────
-    if utilisateur.actif != "true":
+    if not utilisateur.actif:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Compte désactivé — contactez l'administrateur"
@@ -185,3 +164,52 @@ def get_me(current_user: Utilisateur = Depends(get_current_user)):
        (vue nageur ou vue entraîneur)
     """
     return current_user
+
+
+# ─────────────────────────────────────────
+# ENDPOINTS ADMIN
+# ─────────────────────────────────────────
+
+@router.put("/role/{utilisateur_id}", response_model=UtilisateurResponse)
+def changer_role(
+    utilisateur_id: int,
+    data: ChangeRoleSchema,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_admin)
+):
+    """
+    Change le rôle d'un utilisateur.
+    Route protégée — réservée aux administrateurs uniquement.
+
+    - **utilisateur_id** : id de l'utilisateur à modifier
+    - **role** : nouveau rôle (nageur, entraineur, admin)
+
+    C'est la seule façon d'obtenir un rôle autre que "nageur".
+    L'inscription crée toujours un compte avec le rôle "nageur".
+    """
+
+    # ── 1. Vérifie que le rôle est valide ────────
+    roles_valides = ["nageur", "entraineur", "admin"]
+    if data.role not in roles_valides:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Rôle invalide — choisir parmi : {roles_valides}"
+        )
+
+    # ── 2. Récupère l'utilisateur cible ──────────
+    utilisateur = db.query(Utilisateur).filter(
+        Utilisateur.id == utilisateur_id
+    ).first()
+
+    if not utilisateur:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Utilisateur avec l'id {utilisateur_id} introuvable"
+        )
+
+    # ── 3. Met à jour le rôle ────────────────────
+    utilisateur.role = data.role
+    db.commit()
+    db.refresh(utilisateur)
+
+    return utilisateur

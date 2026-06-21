@@ -14,7 +14,7 @@ from app.auth.dependencies import get_current_user, get_current_admin
 from app.database import get_db
 from app.models import Nageur, Utilisateur
 from app.models import Session as SessionModel
-from app.schemas import SeanceCreate, SeanceResponse
+from app.schemas import SeanceCreate, SeanceResponse, SeanceUpdate
 
 router = APIRouter(
     prefix="/sessions",
@@ -38,7 +38,7 @@ def creer_session(
     Route protégée — token JWT requis.
 
     - **nageur_id**  : obligatoire — id du nageur concerné
-    - **date_seance**: obligatoire — date de la séance
+    - **date**       : obligatoire — date de la séance
     - **type_seance**: optionnel (endurance, sprint, technique, récupération)
     - **duree_min**  : optionnel — durée en minutes
     """
@@ -74,21 +74,28 @@ def creer_session(
 
 @router.get("/", response_model=List[SeanceResponse])
 def get_sessions(
+    skip: int = 0,
+    limit: int = 50,
     db: Session = Depends(get_db),
     current_user: Utilisateur = Depends(get_current_user)
 ):
     """
-    Retourne toutes les sessions d'entraînement.
+    Retourne toutes les sessions d'entraînement avec pagination.
     Route protégée — token JWT requis.
+
+    - **skip** : nombre d'éléments à sauter (défaut : 0)
+    - **limit** : nombre maximum d'éléments retournés (défaut : 50, max : 100)
     """
+    limit = min(limit, 100)
+
     # Un nageur ne voit que ses propres sessions
     if current_user.role == "nageur":
         return db.query(SessionModel).filter(
             SessionModel.nageur_id == current_user.nageur_id
-        ).all()
+        ).offset(skip).limit(limit).all()
 
     # Entraîneur et admin voient toutes les sessions
-    return db.query(SessionModel).all()
+    return db.query(SessionModel).offset(skip).limit(limit).all()
 
 
 # ─────────────────────────────────────────
@@ -157,6 +164,55 @@ def get_sessions_nageur(
     return db.query(SessionModel).filter(
         SessionModel.nageur_id == nageur_id
     ).all()
+
+
+# ─────────────────────────────────────────
+# PUT /sessions/{id} — Modifier une session
+# Accessible : entraîneur et admin
+# ─────────────────────────────────────────
+
+@router.put("/{session_id}", response_model=SeanceResponse)
+def modifier_session(
+    session_id: int,
+    data: SeanceUpdate,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
+    """
+    Modifie une session existante — seuls les champs envoyés sont mis à jour.
+    Route protégée — token JWT requis.
+
+    Un nageur ne peut modifier que ses propres sessions.
+    Un entraîneur ou admin peut modifier toutes les sessions.
+
+    - **date** : optionnel
+    - **type_seance** : optionnel
+    - **duree_min** : optionnel
+    """
+
+    session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session avec l'id {session_id} introuvable"
+        )
+
+    # Un nageur ne peut modifier que ses propres sessions
+    if current_user.role == "nageur" and session.nageur_id != current_user.nageur_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vous ne pouvez modifier que vos propres sessions"
+        )
+
+    donnees = data.model_dump(exclude_unset=True)
+    for champ, valeur in donnees.items():
+        setattr(session, champ, valeur)
+
+    db.commit()
+    db.refresh(session)
+
+    return session
 
 
 # ─────────────────────────────────────────

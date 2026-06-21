@@ -3,8 +3,7 @@
 # Ce fichier est le point central de toute interaction avec la base de données.
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from dotenv import load_dotenv
 import os
 
@@ -37,7 +36,9 @@ SessionLocal = sessionmaker(
 )
 
 # Base commune à tous les modèles SQLAlchemy (importée dans models.py)
-Base = declarative_base()
+# SQLAlchemy 2.x : DeclarativeBase remplace declarative_base() déprécié
+class Base(DeclarativeBase):
+    pass
 
 
 def get_db():

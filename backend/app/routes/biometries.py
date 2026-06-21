@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import get_current_user, get_current_admin
 from app.database import get_db
 from app.models import Biometrie, Nageur, Utilisateur
-from app.schemas import BiometrieCreate, BiometrieResponse
+from app.schemas import BiometrieCreate, BiometrieResponse, BiometrieUpdate
 
 router = APIRouter(
     prefix="/biometries",
@@ -74,22 +74,29 @@ def creer_biometrie(
 
 @router.get("/", response_model=List[BiometrieResponse])
 def get_biometries(
+    skip: int = 0,
+    limit: int = 50,
     db: Session = Depends(get_db),
     current_user: Utilisateur = Depends(get_current_user)
 ):
     """
-    Retourne toutes les entrées biométriques.
+    Retourne toutes les entrées biométriques avec pagination.
     Route protégée — token JWT requis.
     Un nageur ne voit que ses propres données.
+
+    - **skip** : nombre d'éléments à sauter (défaut : 0)
+    - **limit** : nombre maximum d'éléments retournés (défaut : 50, max : 100)
     """
+    limit = min(limit, 100)
+
     # Un nageur ne voit que ses propres biométries
     if current_user.role == "nageur":
         return db.query(Biometrie).filter(
             Biometrie.nageur_id == current_user.nageur_id
-        ).all()
+        ).offset(skip).limit(limit).all()
 
     # Entraîneur et admin voient toutes les biométries
-    return db.query(Biometrie).all()
+    return db.query(Biometrie).offset(skip).limit(limit).all()
 
 
 # ─────────────────────────────────────────
@@ -158,6 +165,57 @@ def get_biometries_nageur(
     return db.query(Biometrie).filter(
         Biometrie.nageur_id == nageur_id
     ).all()
+
+
+# ─────────────────────────────────────────
+# PUT /biometries/{id} — Modifier une biométrie
+# Accessible : nageur (ses données) + entraîneur + admin
+# ─────────────────────────────────────────
+
+@router.put("/{biometrie_id}", response_model=BiometrieResponse)
+def modifier_biometrie(
+    biometrie_id: int,
+    data: BiometrieUpdate,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
+    """
+    Modifie une biométrie existante — seuls les champs envoyés sont mis à jour.
+    Route protégée — token JWT requis.
+
+    Un nageur ne peut modifier que ses propres biométries.
+    Un entraîneur ou admin peut modifier toutes les biométries.
+
+    - **date** : optionnel
+    - **hrv_ms** : optionnel
+    - **fc_repos** : optionnel
+    - **rpe** : optionnel
+    - **sommeil_h** : optionnel
+    """
+
+    biometrie = db.query(Biometrie).filter(Biometrie.id == biometrie_id).first()
+
+    if not biometrie:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Biométrie avec l'id {biometrie_id} introuvable"
+        )
+
+    # Un nageur ne peut modifier que ses propres biométries
+    if current_user.role == "nageur" and biometrie.nageur_id != current_user.nageur_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vous ne pouvez modifier que vos propres données biométriques"
+        )
+
+    donnees = data.model_dump(exclude_unset=True)
+    for champ, valeur in donnees.items():
+        setattr(biometrie, champ, valeur)
+
+    db.commit()
+    db.refresh(biometrie)
+
+    return biometrie
 
 
 # ─────────────────────────────────────────

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import get_current_user, get_current_admin
 from app.database import get_db
 from app.models import Nageur, Utilisateur
-from app.schemas import NageurCreate, NageurResponse
+from app.schemas import NageurCreate, NageurResponse, NageurUpdate
 
 router = APIRouter(
     prefix="/nageurs",
@@ -79,14 +79,21 @@ def creer_nageur(
 
 @router.get("/", response_model=List[NageurResponse])
 def get_nageurs(
+    skip: int = 0,
+    limit: int = 50,
     db: Session = Depends(get_db),
     current_user: Utilisateur = Depends(get_current_user)
 ):
     """
-    Retourne la liste de tous les nageurs enregistrés.
+    Retourne la liste de tous les nageurs enregistrés avec pagination.
     Route protégée — token JWT requis.
+
+    - **skip** : nombre d'éléments à sauter (défaut : 0)
+    - **limit** : nombre maximum d'éléments retournés (défaut : 50, max : 100)
     """
-    return db.query(Nageur).all()
+    # Plafonne le limit à 100 pour éviter les requêtes trop lourdes
+    limit = min(limit, 100)
+    return db.query(Nageur).offset(skip).limit(limit).all()
 
 
 # ─────────────────────────────────────────
@@ -112,6 +119,56 @@ def get_nageur(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Nageur avec l'id {nageur_id} introuvable"
         )
+
+    return nageur
+
+
+# ─────────────────────────────────────────
+# PUT /nageurs/{id} — Modifier un nageur
+# Accessible : entraîneur et admin uniquement
+# ─────────────────────────────────────────
+
+@router.put("/{nageur_id}", response_model=NageurResponse)
+def modifier_nageur(
+    nageur_id: int,
+    data: NageurUpdate,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
+    """
+    Modifie un nageur existant — seuls les champs envoyés sont mis à jour.
+    Route protégée — réservée aux entraîneurs et admins.
+
+    - **nom** : optionnel
+    - **prenom** : optionnel
+    - **date_naissance** : optionnel
+    - **specialite** : optionnel
+    - **niveau** : optionnel
+    """
+
+    # Seuls les entraîneurs et admins peuvent modifier un nageur
+    if current_user.role not in ["entraineur", "admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Seuls les entraîneurs peuvent modifier des nageurs"
+        )
+
+    nageur = db.query(Nageur).filter(Nageur.id == nageur_id).first()
+
+    if not nageur:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Nageur avec l'id {nageur_id} introuvable"
+        )
+
+    # exclude_unset=True : ignore les champs non envoyés dans la requête
+    # Seuls les champs explicitement fournis sont mis à jour
+    donnees = data.model_dump(exclude_unset=True)
+    for champ, valeur in donnees.items():
+        setattr(nageur, champ, valeur)
+
+    db.commit()
+    db.refresh(nageur)
 
     return nageur
 

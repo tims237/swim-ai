@@ -4,7 +4,7 @@
 # Il est importé par router.py et dependencies.py
 
 # 1. Bibliothèques standard
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 # 2. Bibliothèques tierces
@@ -104,8 +104,9 @@ def creer_token(data: dict, expire_minutes: Optional[int] = None) -> str:
     donnees = data.copy()
 
     # Calcule la date d'expiration du token
+    # datetime.now(timezone.utc) remplace datetime.utcnow() déprécié depuis Python 3.12
     duree = expire_minutes or ACCESS_TOKEN_EXPIRE_MINUTES
-    expiration = datetime.utcnow() + timedelta(minutes=duree)
+    expiration = datetime.now(timezone.utc) + timedelta(minutes=duree)
 
     # Ajoute l'expiration aux données du token
     # "exp" est un champ standard JWT — vérifié automatiquement

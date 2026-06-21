@@ -2,7 +2,7 @@
 # Définition des modèles SQLAlchemy — chaque classe = une table PostgreSQL
 # La Base est importée depuis database.py — une seule Base pour tout le projet
 
-from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, String, Float, Date, ForeignKey
 from sqlalchemy.orm import relationship
 
 # Import de la Base centrale — définie dans database.py
@@ -133,7 +133,7 @@ class Utilisateur(Base):
     nageur_id = Column(Integer, ForeignKey("nageurs.id", ondelete="SET NULL"), nullable=True)
 
     # Statut du compte — permet de désactiver sans supprimer
-    actif = Column(String, nullable=False, default="true")
+    actif = Column(Boolean, nullable=False, default=True)
 
     # Relation ORM vers le profil nageur
     nageur = relationship("Nageur", backref="utilisateur")

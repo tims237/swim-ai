@@ -91,7 +91,7 @@ def get_current_user(
         raise credentials_exception
 
     # ── 4. Vérifie que le compte est actif ───────
-    if utilisateur.actif != "true":
+    if not utilisateur.actif:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Compte désactivé — contactez l'administrateur"

@@ -286,10 +286,12 @@ def get_dashboard(
     charge = calculer_charge(sessions)
 
     # ── 6. Historique des chronos pour Recharts ───
+    # Chaque performance est liée à sa session via session_id
+    # On utilise la relation ORM pour récupérer la date de la session
     historique_chronos = [
-        PointChrono(date=s.date, temps_s=p.temps_s)
-        for p, s in zip(performances, sessions)
-        if p.temps_s is not None and s.date is not None
+        PointChrono(date=p.session.date, temps_s=p.temps_s)
+        for p in performances
+        if p.temps_s is not None and p.session is not None and p.session.date is not None
     ]
 
     # ── 7. Recommandations ────────────────────────

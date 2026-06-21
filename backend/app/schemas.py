@@ -50,12 +50,16 @@ class NageurResponse(NageurBase):
 # Renommé de "Session" en "Seance" pour éviter le conflit
 # avec Session de SQLAlchemy (sqlalchemy.orm.Session)
 # La table PostgreSQL reste bien nommée "sessions" dans models.py
+#
+# IMPORTANT : le champ s'appelle "date" et non "date_seance"
+# pour correspondre exactement à la colonne Session.date dans models.py
+# (Bug corrigé le 21/06 — incohérence qui bloquait POST /sessions)
 # ─────────────────────────────────────────────
 
 class SeanceBase(BaseModel):
     """Champs communs pour une séance d'entraînement."""
     nageur_id   : int            = Field(..., json_schema_extra={"example": 1})
-    date_seance: date            = Field(..., json_schema_extra={"example": "2025-05-01"})
+    date        : date           = Field(..., json_schema_extra={"example": "2025-05-01"})
     type_seance : Optional[str]  = Field(None, json_schema_extra={"example": "endurance"})
     duree_min   : Optional[int]  = Field(None, json_schema_extra={"example": 90})
 
@@ -75,12 +79,16 @@ class SeanceResponse(SeanceBase):
 
 # ─────────────────────────────────────────────
 # BIOMETRIE
+#
+# IMPORTANT : le champ s'appelle "date" et non "date_seance"
+# pour correspondre exactement à la colonne Biometrie.date dans models.py
+# (Bug corrigé le 21/06 — incohérence qui bloquait POST /biometries)
 # ─────────────────────────────────────────────
 
 class BiometrieBase(BaseModel):
     """Champs communs pour une entrée biométrique journalière."""
     nageur_id : int             = Field(..., json_schema_extra={"example": 1})
-    date_seance  : date         = Field(..., json_schema_extra={"example": "2025-05-01"})
+    date      : date            = Field(..., json_schema_extra={"example": "2025-05-01"})
     hrv_ms    : Optional[float] = Field(None, json_schema_extra={"example": 78.5})  # variabilité cardiaque
     fc_repos  : Optional[int]   = Field(None, json_schema_extra={"example": 52})    # fréquence cardiaque repos
     rpe       : Optional[int]   = Field(None, json_schema_extra={"example": 6})     # effort perçu 1-10
@@ -124,3 +132,78 @@ class PerformanceResponse(PerformanceBase):
 
     class Config:
         from_attributes = True
+
+
+# ─────────────────────────────────────────────
+# SCHÉMAS D'UPDATE (PUT/PATCH)
+# Tous les champs sont optionnels — seuls les champs envoyés sont modifiés
+# ─────────────────────────────────────────────
+
+class NageurUpdate(BaseModel):
+    """Schéma de mise à jour — seuls les champs envoyés sont modifiés."""
+    nom            : Optional[str]  = None
+    prenom         : Optional[str]  = None
+    date_naissance : Optional[date] = None
+    specialite     : Optional[str]  = None
+    niveau         : Optional[str]  = None
+
+
+class SeanceUpdate(BaseModel):
+    """Schéma de mise à jour d'une séance."""
+    date        : Optional[date] = None
+    type_seance : Optional[str]  = None
+    duree_min   : Optional[int]  = None
+
+
+class BiometrieUpdate(BaseModel):
+    """Schéma de mise à jour d'une biométrie."""
+    date      : Optional[date]  = None
+    hrv_ms    : Optional[float] = None
+    fc_repos  : Optional[int]   = None
+    rpe       : Optional[int]   = None
+    sommeil_h : Optional[float] = None
+
+
+class PerformanceUpdate(BaseModel):
+    """Schéma de mise à jour d'une performance."""
+    distance_m  : Optional[int]   = None
+    temps_s     : Optional[float] = None
+    style_nage  : Optional[str]   = None
+    vitesse_moy : Optional[float] = None
+
+
+# ─────────────────────────────────────────────
+# UTILISATEUR (auth)
+# ─────────────────────────────────────────────
+
+class InscriptionSchema(BaseModel):
+    """Données nécessaires pour créer un compte.
+    Le rôle n'est PAS accepté depuis le formulaire — toujours "nageur" par défaut.
+    Seul un admin peut promouvoir un utilisateur via PUT /auth/role.
+    """
+    email        : str             # adresse email — identifiant unique
+    mot_de_passe : str             # mot de passe en clair — hashé avant stockage (min 8 car.)
+    nageur_id    : Optional[int] = None  # lien optionnel vers un profil nageur
+
+
+class TokenSchema(BaseModel):
+    """Réponse renvoyée après une connexion réussie."""
+    access_token : str   # token JWT à stocker côté frontend
+    token_type   : str   # toujours "bearer" — standard OAuth2
+
+
+class UtilisateurResponse(BaseModel):
+    """Informations de l'utilisateur connecté — renvoyé par /auth/me."""
+    id        : int
+    email     : str
+    role      : str
+    nageur_id : Optional[int] = None
+    actif     : bool   # True = compte actif, False = compte désactivé
+
+    class Config:
+        from_attributes = True
+
+
+class ChangeRoleSchema(BaseModel):
+    """Données pour changer le rôle d'un utilisateur — admin uniquement."""
+    role : str   # nouveau rôle : "nageur", "entraineur" ou "admin"
