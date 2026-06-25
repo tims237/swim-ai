@@ -4,7 +4,10 @@
 # Pydantic v2 : "example" est remplacé par "json_schema_extra"
 
 from pydantic import BaseModel, Field
-from datetime import date
+# "date as DateType" evite le conflit Pydantic v2 :
+# sans ca, le champ "date" et le type "date" portent le meme nom
+# → PydanticUserError: field name clashing with a type annotation
+from datetime import date as DateType
 from typing import Optional
 
 
@@ -19,7 +22,7 @@ class NageurBase(BaseModel):
     """
     nom            : str            = Field(..., json_schema_extra={"example": "Dupont"})
     prenom         : str            = Field(..., json_schema_extra={"example": "Lucas"})
-    date_naissance : Optional[date] = Field(None, json_schema_extra={"example": "2000-03-15"})
+    date_naissance : Optional[DateType] = Field(None, json_schema_extra={"example": "2000-03-15"})
     specialite     : Optional[str]  = Field(None, json_schema_extra={"example": "100m crawl"})
     niveau         : Optional[str]  = Field(None, json_schema_extra={"example": "national"})
 
@@ -59,7 +62,7 @@ class NageurResponse(NageurBase):
 class SeanceBase(BaseModel):
     """Champs communs pour une séance d'entraînement."""
     nageur_id   : int            = Field(..., json_schema_extra={"example": 1})
-    date        : date           = Field(..., json_schema_extra={"example": "2025-05-01"})
+    date        : DateType       = Field(..., json_schema_extra={"example": "2025-05-01"})
     type_seance : Optional[str]  = Field(None, json_schema_extra={"example": "endurance"})
     duree_min   : Optional[int]  = Field(None, json_schema_extra={"example": 90})
 
@@ -88,7 +91,7 @@ class SeanceResponse(SeanceBase):
 class BiometrieBase(BaseModel):
     """Champs communs pour une entrée biométrique journalière."""
     nageur_id : int             = Field(..., json_schema_extra={"example": 1})
-    date      : date            = Field(..., json_schema_extra={"example": "2025-05-01"})
+    date      : DateType        = Field(..., json_schema_extra={"example": "2025-05-01"})
     hrv_ms    : Optional[float] = Field(None, json_schema_extra={"example": 78.5})  # variabilité cardiaque
     fc_repos  : Optional[int]   = Field(None, json_schema_extra={"example": 52})    # fréquence cardiaque repos
     rpe       : Optional[int]   = Field(None, json_schema_extra={"example": 6})     # effort perçu 1-10
@@ -143,21 +146,21 @@ class NageurUpdate(BaseModel):
     """Schéma de mise à jour — seuls les champs envoyés sont modifiés."""
     nom            : Optional[str]  = None
     prenom         : Optional[str]  = None
-    date_naissance : Optional[date] = None
+    date_naissance : Optional[DateType] = None
     specialite     : Optional[str]  = None
     niveau         : Optional[str]  = None
 
 
 class SeanceUpdate(BaseModel):
     """Schéma de mise à jour d'une séance."""
-    date        : Optional[date] = None
+    date        : Optional[DateType] = None
     type_seance : Optional[str]  = None
     duree_min   : Optional[int]  = None
 
 
 class BiometrieUpdate(BaseModel):
     """Schéma de mise à jour d'une biométrie."""
-    date      : Optional[date]  = None
+    date      : Optional[DateType]  = None
     hrv_ms    : Optional[float] = None
     fc_repos  : Optional[int]   = None
     rpe       : Optional[int]   = None
