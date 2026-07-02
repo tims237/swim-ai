@@ -31,7 +31,9 @@ from app.schemas import (
     InscriptionEntraineurSchema,
     TokenSchema,
     UtilisateurResponse,
-    ChangeRoleSchema
+    ChangeRoleSchema,
+    ChangePasswordSchema,
+    ResetPasswordAdminSchema
 )
 
 router = APIRouter(
@@ -389,3 +391,98 @@ def changer_role(
     db.refresh(utilisateur)
 
     return utilisateur
+
+
+# ─────────────────────────────────────────
+# CHANGEMENT DE MOT DE PASSE (utilisateur connecté)
+# ─────────────────────────────────────────
+
+@router.post("/change-password", status_code=status.HTTP_204_NO_CONTENT)
+def changer_mot_de_passe(
+    data: ChangePasswordSchema,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
+    """
+    Permet à l'utilisateur connecté de changer son propre mot de passe.
+    Route protégée — token JWT requis.
+
+    L'utilisateur doit fournir son mot de passe actuel pour confirmer son identité.
+    Sans cette vérification, n'importe qui ayant accès à un écran déverrouillé
+    pourrait changer le mot de passe à l'insu du propriétaire.
+
+    - **mot_de_passe_actuel** : mot de passe actuel (confirmation d'identité)
+    - **nouveau_mot_de_passe** : nouveau mot de passe — min 8 caractères
+    """
+
+    # ── 1. Vérifie le mot de passe actuel ────────
+    if not verifier_mot_de_passe(data.mot_de_passe_actuel, current_user.mot_de_passe):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Mot de passe actuel incorrect"
+        )
+
+    # ── 2. Valide le nouveau mot de passe ─────────
+    if len(data.nouveau_mot_de_passe) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le nouveau mot de passe doit contenir au moins 8 caractères"
+        )
+
+    if data.nouveau_mot_de_passe == data.mot_de_passe_actuel:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le nouveau mot de passe doit être différent de l'ancien"
+        )
+
+    # ── 3. Hache et enregistre le nouveau mot de passe ──
+    current_user.mot_de_passe = hasher_mot_de_passe(data.nouveau_mot_de_passe)
+    db.commit()
+
+
+# ─────────────────────────────────────────
+# RÉINITIALISATION PAR UN ADMIN (mot de passe oublié)
+# ─────────────────────────────────────────
+
+@router.post("/reset-password/{utilisateur_id}", status_code=status.HTTP_204_NO_CONTENT)
+def reinitialiser_mot_de_passe(
+    utilisateur_id: int,
+    data: ResetPasswordAdminSchema,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_admin)
+):
+    """
+    Réinitialise le mot de passe d'un utilisateur — admin uniquement.
+    Utilisé quand un utilisateur ne peut plus se connecter (mot de passe oublié).
+
+    Workflow recommandé :
+    1. L'utilisateur contacte son entraîneur ou l'administrateur
+    2. L'admin définit un mot de passe temporaire via cette route
+    3. L'admin communique ce mot de passe temporaire à l'utilisateur
+    4. L'utilisateur se connecte et change son mot de passe via POST /auth/change-password
+
+    - **utilisateur_id** : id de l'utilisateur concerné
+    - **nouveau_mot_de_passe** : mot de passe temporaire — min 8 caractères
+    """
+
+    # ── 1. Vérifie que l'utilisateur existe ───────
+    utilisateur = db.query(Utilisateur).filter(
+        Utilisateur.id == utilisateur_id
+    ).first()
+
+    if not utilisateur:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Utilisateur avec l'id {utilisateur_id} introuvable"
+        )
+
+    # ── 2. Valide le nouveau mot de passe ─────────
+    if len(data.nouveau_mot_de_passe) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le mot de passe temporaire doit contenir au moins 8 caractères"
+        )
+
+    # ── 3. Hache et enregistre le nouveau mot de passe ──
+    utilisateur.mot_de_passe = hasher_mot_de_passe(data.nouveau_mot_de_passe)
+    db.commit()

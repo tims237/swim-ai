@@ -247,3 +247,21 @@ class UtilisateurResponse(BaseModel):
 class ChangeRoleSchema(BaseModel):
     """Données pour changer le rôle d'un utilisateur — admin uniquement."""
     role : str   # nouveau rôle : "nageur", "entraineur" ou "admin"
+
+
+class ChangePasswordSchema(BaseModel):
+    """Changement de mot de passe — utilisateur connecté.
+    Route : POST /auth/change-password
+    L'utilisateur doit fournir son mot de passe actuel pour confirmer son identité.
+    """
+    mot_de_passe_actuel : str   # mot de passe actuel — vérifié avant modification
+    nouveau_mot_de_passe : str  # nouveau mot de passe — min 8 caractères
+
+
+class ResetPasswordAdminSchema(BaseModel):
+    """Réinitialisation de mot de passe par un admin.
+    Route : POST /auth/reset-password/{user_id}
+    Utilisé quand un utilisateur ne peut plus se connecter du tout.
+    Un mot de passe temporaire est défini par l'admin, l'utilisateur devra le changer.
+    """
+    nouveau_mot_de_passe : str  # nouveau mot de passe temporaire — min 8 caractères
