@@ -2,7 +2,7 @@
 # Définition des modèles SQLAlchemy — chaque classe = une table PostgreSQL
 # La Base est importée depuis database.py — une seule Base pour tout le projet
 
-from sqlalchemy import Boolean, Column, Integer, String, Float, Date, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, String, Float, Date, ForeignKey, Text
 from sqlalchemy.orm import relationship
 
 # Import de la Base centrale — définie dans database.py
@@ -120,6 +120,12 @@ class Utilisateur(Base):
     # Identifiants de connexion
     email        = Column(String, unique=True, nullable=False, index=True)  # identifiant unique
     mot_de_passe = Column(String, nullable=False)  # hash bcrypt — jamais en clair
+
+    # Informations personnelles — saisies à l'inscription
+    nom             = Column(String, nullable=False)
+    prenom          = Column(String, nullable=False)
+    date_naissance  = Column(Date, nullable=True)
+    lieu_naissance  = Column(String, nullable=True)
 
     # Rôle — détermine les accès dans l'application
     # "nageur"      → accès à ses propres données uniquement

@@ -180,13 +180,40 @@ class PerformanceUpdate(BaseModel):
 # ─────────────────────────────────────────────
 
 class InscriptionSchema(BaseModel):
-    """Données nécessaires pour créer un compte.
-    Le rôle n'est PAS accepté depuis le formulaire — toujours "nageur" par défaut.
-    Seul un admin peut promouvoir un utilisateur via PUT /auth/role.
+    """Ancien schéma d'inscription générique — conservé pour compatibilité.
+    Préférer InscriptionNageurSchema ou InscriptionEntraineurSchema.
     """
-    email        : str             # adresse email — identifiant unique
-    mot_de_passe : str             # mot de passe en clair — hashé avant stockage (min 8 car.)
-    nageur_id    : Optional[int] = None  # lien optionnel vers un profil nageur
+    email        : str
+    mot_de_passe : str
+    nageur_id    : Optional[int] = None
+
+
+class InscriptionNageurSchema(BaseModel):
+    """Schéma d'inscription pour un nageur.
+    Route : POST /auth/register/nageur
+    Crée automatiquement un compte (role=nageur) + un profil nageur lié.
+    """
+    email           : str
+    mot_de_passe    : str                  # min 8 caractères — validé côté route
+    nom             : str
+    prenom          : str
+    date_naissance  : Optional[DateType] = None
+    lieu_naissance  : Optional[str]      = None
+    specialite      : Optional[str]      = None  # ex: "100m crawl"
+    niveau          : Optional[str]      = None  # ex: "national", "régional"
+
+
+class InscriptionEntraineurSchema(BaseModel):
+    """Schéma d'inscription pour un entraîneur.
+    Route : POST /auth/register/entraineur
+    Crée un compte avec role=entraineur (pas de profil nageur associé).
+    """
+    email           : str
+    mot_de_passe    : str                  # min 8 caractères — validé côté route
+    nom             : str
+    prenom          : str
+    date_naissance  : Optional[DateType] = None
+    lieu_naissance  : Optional[str]      = None
 
 
 class TokenSchema(BaseModel):
@@ -196,12 +223,16 @@ class TokenSchema(BaseModel):
 
 
 class UtilisateurResponse(BaseModel):
-    """Informations de l'utilisateur connecté — renvoyé par /auth/me."""
-    id        : int
-    email     : str
-    role      : str
-    nageur_id : Optional[int] = None
-    actif     : bool   # True = compte actif, False = compte désactivé
+    """Informations de l'utilisateur connecté — renvoyé par /auth/me et les routes d'inscription."""
+    id             : int
+    email          : str
+    role           : str
+    nom            : str
+    prenom         : str
+    date_naissance : Optional[DateType] = None
+    lieu_naissance : Optional[str]      = None
+    nageur_id      : Optional[int]      = None
+    actif          : bool
 
     class Config:
         from_attributes = True

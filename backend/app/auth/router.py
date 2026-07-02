@@ -17,8 +17,11 @@ from app.auth.security import (
 from app.auth.dependencies import get_current_user, get_current_admin
 from app.database import get_db
 from app.models import Utilisateur
+from app.models import Nageur
 from app.schemas import (
     InscriptionSchema,
+    InscriptionNageurSchema,
+    InscriptionEntraineurSchema,
     TokenSchema,
     UtilisateurResponse,
     ChangeRoleSchema
@@ -83,6 +86,104 @@ def inscription(utilisateur: InscriptionSchema, db: Session = Depends(get_db)):
         actif        = True
     )
 
+    db.add(nouvel_utilisateur)
+    db.commit()
+    db.refresh(nouvel_utilisateur)
+
+    return nouvel_utilisateur
+
+
+@router.post("/register/nageur", response_model=UtilisateurResponse, status_code=status.HTTP_201_CREATED)
+def inscription_nageur(data: InscriptionNageurSchema, db: Session = Depends(get_db)):
+    """
+    Inscription d'un nageur.
+    Crée un compte utilisateur (role=nageur) ET un profil nageur lié automatiquement.
+
+    Champs requis : email, mot_de_passe (min 8 car.), nom, prenom
+    Champs optionnels : date_naissance, lieu_naissance, specialite, niveau
+    """
+
+    # ── 1. Validation mot de passe ───────────────
+    if len(data.mot_de_passe) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le mot de passe doit contenir au moins 8 caractères"
+        )
+
+    # ── 2. Email unique ───────────────────────────
+    if db.query(Utilisateur).filter(Utilisateur.email == data.email).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Un compte avec l'email {data.email} existe déjà"
+        )
+
+    # ── 3. Crée le profil nageur ──────────────────
+    profil_nageur = Nageur(
+        nom            = data.nom,
+        prenom         = data.prenom,
+        date_naissance = data.date_naissance,
+        specialite     = data.specialite,
+        niveau         = data.niveau,
+    )
+    db.add(profil_nageur)
+    db.flush()  # génère profil_nageur.id sans encore committer
+
+    # ── 4. Crée le compte utilisateur ────────────
+    nouvel_utilisateur = Utilisateur(
+        email           = data.email,
+        mot_de_passe    = hasher_mot_de_passe(data.mot_de_passe),
+        role            = "nageur",        # rôle imposé par cette route
+        nom             = data.nom,
+        prenom          = data.prenom,
+        date_naissance  = data.date_naissance,
+        lieu_naissance  = data.lieu_naissance,
+        nageur_id       = profil_nageur.id,
+        actif           = True
+    )
+    db.add(nouvel_utilisateur)
+    db.commit()
+    db.refresh(nouvel_utilisateur)
+
+    return nouvel_utilisateur
+
+
+@router.post("/register/entraineur", response_model=UtilisateurResponse, status_code=status.HTTP_201_CREATED)
+def inscription_entraineur(data: InscriptionEntraineurSchema, db: Session = Depends(get_db)):
+    """
+    Inscription d'un entraîneur.
+    Crée un compte utilisateur avec role=entraineur.
+    Pas de profil nageur associé — l'entraîneur gère l'équipe, il ne nage pas.
+
+    Champs requis : email, mot_de_passe (min 8 car.), nom, prenom
+    Champs optionnels : date_naissance, lieu_naissance
+    """
+
+    # ── 1. Validation mot de passe ───────────────
+    if len(data.mot_de_passe) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le mot de passe doit contenir au moins 8 caractères"
+        )
+
+    # ── 2. Email unique ───────────────────────────
+    if db.query(Utilisateur).filter(Utilisateur.email == data.email).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Un compte avec l'email {data.email} existe déjà"
+        )
+
+    # ── 3. Crée le compte entraîneur ─────────────
+    nouvel_utilisateur = Utilisateur(
+        email           = data.email,
+        mot_de_passe    = hasher_mot_de_passe(data.mot_de_passe),
+        role            = "entraineur",    # rôle imposé par cette route
+        nom             = data.nom,
+        prenom          = data.prenom,
+        date_naissance  = data.date_naissance,
+        lieu_naissance  = data.lieu_naissance,
+        nageur_id       = None,            # pas de profil nageur pour un entraîneur
+        actif           = True
+    )
     db.add(nouvel_utilisateur)
     db.commit()
     db.refresh(nouvel_utilisateur)
