@@ -20,7 +20,40 @@ from passlib.context import CryptContext
 # Cette clé doit rester secrète — si elle est compromise,
 # n'importe qui peut créer des tokens valides
 import os
-SECRET_KEY = os.getenv("SECRET_KEY", "swim-ai-secret-key-dev")
+import sys
+
+SECRET_KEY = os.getenv("SECRET_KEY", "")
+
+# Clés par défaut interdites en production
+_CLES_INTERDITES = {
+    "",
+    "swim-ai-secret-key-dev",
+    "swim-ai-secret-key-change-this-in-production",
+    "changeme",
+    "secret",
+}
+
+# En production (ENVIRONMENT=production), on bloque au démarrage
+# si la clé est absente ou identique à une valeur par défaut connue
+_ENV = os.getenv("ENVIRONMENT", "development")
+if _ENV == "production" and SECRET_KEY in _CLES_INTERDITES:
+    print(
+        "[ERREUR CRITIQUE] SECRET_KEY non configurée ou valeur par défaut détectée.\n"
+        "Définissez une clé aléatoire d'au moins 32 caractères dans votre .env :\n"
+        "  SECRET_KEY=$(openssl rand -hex 32)\n"
+        "Le serveur ne peut pas démarrer en production sans une SECRET_KEY sécurisée.",
+        file=sys.stderr
+    )
+    sys.exit(1)
+
+# En développement, on avertit sans bloquer
+if _ENV != "production" and SECRET_KEY in _CLES_INTERDITES:
+    SECRET_KEY = "swim-ai-dev-key-not-for-production"
+    print(
+        "[AVERTISSEMENT] SECRET_KEY non configurée — clé de développement utilisée.\n"
+        "Ne jamais utiliser cette configuration en production.",
+        file=sys.stderr
+    )
 
 # Algorithme de chiffrement utilisé pour signer le token
 # HS256 = HMAC avec SHA-256 — standard et suffisant pour le MVP

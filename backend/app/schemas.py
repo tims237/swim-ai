@@ -199,8 +199,11 @@ class InscriptionNageurSchema(BaseModel):
     prenom          : str
     date_naissance  : Optional[DateType] = None
     lieu_naissance  : Optional[str]      = None
-    specialite      : Optional[str]      = None  # ex: "100m crawl"
-    niveau          : Optional[str]      = None  # ex: "national", "régional"
+    specialite      : Optional[str]      = None
+    niveau          : Optional[str]      = None
+    # RGPD Article 9 — consentement explicite obligatoire pour les données de santé
+    # Le frontend doit afficher la case à cocher avant d'envoyer ce champ à True
+    consentement_donnees_sante : bool = False
 
 
 class InscriptionEntraineurSchema(BaseModel):
@@ -214,6 +217,8 @@ class InscriptionEntraineurSchema(BaseModel):
     prenom          : str
     date_naissance  : Optional[DateType] = None
     lieu_naissance  : Optional[str]      = None
+    # RGPD — consentement traitement des données personnelles
+    consentement_donnees_sante : bool = False
 
 
 class TokenSchema(BaseModel):
@@ -224,15 +229,16 @@ class TokenSchema(BaseModel):
 
 class UtilisateurResponse(BaseModel):
     """Informations de l'utilisateur connecté — renvoyé par /auth/me et les routes d'inscription."""
-    id             : int
-    email          : str
-    role           : str
-    nom            : str
-    prenom         : str
-    date_naissance : Optional[DateType] = None
-    lieu_naissance : Optional[str]      = None
-    nageur_id      : Optional[int]      = None
-    actif          : bool
+    id                         : int
+    email                      : str
+    role                       : str
+    nom                        : str
+    prenom                     : str
+    date_naissance             : Optional[DateType] = None
+    lieu_naissance             : Optional[str]      = None
+    nageur_id                  : Optional[int]      = None
+    actif                      : bool
+    consentement_donnees_sante : bool               = False
 
     class Config:
         from_attributes = True

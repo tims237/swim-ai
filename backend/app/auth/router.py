@@ -3,9 +3,15 @@
 # Ces routes sont publiques — accessibles sans token JWT
 
 # 2. Bibliothèques tierces
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy.orm import Session
+
+# Limites par IP pour les routes d'authentification
+# Protection contre les attaques brute-force et l'énumération d'emails
+limiter = Limiter(key_func=get_remote_address)
 
 # 3. Imports locaux
 from app.auth.security import (
@@ -17,6 +23,7 @@ from app.auth.security import (
 from app.auth.dependencies import get_current_user, get_current_admin
 from app.database import get_db
 from app.models import Utilisateur
+from datetime import datetime, timezone
 from app.models import Nageur
 from app.schemas import (
     InscriptionSchema,
@@ -117,7 +124,14 @@ def inscription_nageur(data: InscriptionNageurSchema, db: Session = Depends(get_
             detail=f"Un compte avec l'email {data.email} existe déjà"
         )
 
-    # ── 3. Crée le profil nageur ──────────────────
+    # ── 3. Vérifie le consentement RGPD ──────────
+    if not data.consentement_donnees_sante:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le consentement au traitement des données de santé est obligatoire (RGPD Article 9)"
+        )
+
+    # ── 4. Crée le profil nageur ──────────────────
     profil_nageur = Nageur(
         nom            = data.nom,
         prenom         = data.prenom,
@@ -126,19 +140,21 @@ def inscription_nageur(data: InscriptionNageurSchema, db: Session = Depends(get_
         niveau         = data.niveau,
     )
     db.add(profil_nageur)
-    db.flush()  # génère profil_nageur.id sans encore committer
+    db.flush()
 
-    # ── 4. Crée le compte utilisateur ────────────
+    # ── 5. Crée le compte utilisateur ────────────
     nouvel_utilisateur = Utilisateur(
-        email           = data.email,
-        mot_de_passe    = hasher_mot_de_passe(data.mot_de_passe),
-        role            = "nageur",        # rôle imposé par cette route
-        nom             = data.nom,
-        prenom          = data.prenom,
-        date_naissance  = data.date_naissance,
-        lieu_naissance  = data.lieu_naissance,
-        nageur_id       = profil_nageur.id,
-        actif           = True
+        email                      = data.email,
+        mot_de_passe               = hasher_mot_de_passe(data.mot_de_passe),
+        role                       = "nageur",
+        nom                        = data.nom,
+        prenom                     = data.prenom,
+        date_naissance             = data.date_naissance,
+        lieu_naissance             = data.lieu_naissance,
+        nageur_id                  = profil_nageur.id,
+        actif                      = True,
+        consentement_donnees_sante = True,
+        date_consentement          = datetime.now(timezone.utc)
     )
     db.add(nouvel_utilisateur)
     db.commit()
@@ -172,17 +188,26 @@ def inscription_entraineur(data: InscriptionEntraineurSchema, db: Session = Depe
             detail=f"Un compte avec l'email {data.email} existe déjà"
         )
 
-    # ── 3. Crée le compte entraîneur ─────────────
+    # ── 3. Vérifie le consentement RGPD ──────────
+    if not data.consentement_donnees_sante:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le consentement au traitement des données personnelles est obligatoire (RGPD)"
+        )
+
+    # ── 4. Crée le compte entraîneur ─────────────
     nouvel_utilisateur = Utilisateur(
-        email           = data.email,
-        mot_de_passe    = hasher_mot_de_passe(data.mot_de_passe),
-        role            = "entraineur",    # rôle imposé par cette route
-        nom             = data.nom,
-        prenom          = data.prenom,
-        date_naissance  = data.date_naissance,
-        lieu_naissance  = data.lieu_naissance,
-        nageur_id       = None,            # pas de profil nageur pour un entraîneur
-        actif           = True
+        email                      = data.email,
+        mot_de_passe               = hasher_mot_de_passe(data.mot_de_passe),
+        role                       = "entraineur",
+        nom                        = data.nom,
+        prenom                     = data.prenom,
+        date_naissance             = data.date_naissance,
+        lieu_naissance             = data.lieu_naissance,
+        nageur_id                  = None,
+        actif                      = True,
+        consentement_donnees_sante = True,
+        date_consentement          = datetime.now(timezone.utc)
     )
     db.add(nouvel_utilisateur)
     db.commit()
@@ -192,7 +217,9 @@ def inscription_entraineur(data: InscriptionEntraineurSchema, db: Session = Depe
 
 
 @router.post("/login", response_model=TokenSchema)
+@limiter.limit("5/minute")   # max 5 tentatives de connexion par minute par IP
 def connexion(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
@@ -265,6 +292,40 @@ def get_me(current_user: Utilisateur = Depends(get_current_user)):
        (vue nageur ou vue entraîneur)
     """
     return current_user
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+def supprimer_mon_compte(
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
+    """
+    Droit à l'effacement — RGPD Article 17.
+    Supprime définitivement le compte de l'utilisateur connecté
+    ainsi que TOUTES ses données associées :
+
+    → compte utilisateur
+    → profil nageur (si role=nageur)
+    → toutes ses sessions d'entraînement (CASCADE)
+    → toutes ses biométries (CASCADE)
+    → toutes ses performances (CASCADE)
+
+    Cette action est irréversible.
+    Le token JWT devient immédiatement invalide après suppression.
+    """
+
+    # Si l'utilisateur est un nageur, supprimer son profil nageur en premier
+    # (la suppression du profil déclenche le CASCADE sur sessions/biometries/performances)
+    if current_user.nageur_id:
+        nageur = db.query(Nageur).filter(
+            Nageur.id == current_user.nageur_id
+        ).first()
+        if nageur:
+            db.delete(nageur)
+
+    # Supprime le compte utilisateur
+    db.delete(current_user)
+    db.commit()
 
 
 # ─────────────────────────────────────────

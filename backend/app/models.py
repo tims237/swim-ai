@@ -2,7 +2,8 @@
 # Définition des modèles SQLAlchemy — chaque classe = une table PostgreSQL
 # La Base est importée depuis database.py — une seule Base pour tout le projet
 
-from sqlalchemy import Boolean, Column, Integer, String, Float, Date, ForeignKey, Text
+from sqlalchemy import Boolean, Column, Integer, String, Float, Date, ForeignKey, Text, DateTime
+from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
 
 # Import de la Base centrale — définie dans database.py
@@ -141,5 +142,40 @@ class Utilisateur(Base):
     # Statut du compte — permet de désactiver sans supprimer
     actif = Column(Boolean, nullable=False, default=True)
 
+    # Consentement RGPD — obligatoire pour les données de santé (Article 9)
+    # True = l'utilisateur a explicitement accepté le traitement de ses données de santé
+    # False ou None = pas de consentement → accès aux routes biométries refusé
+    consentement_donnees_sante  = Column(Boolean, nullable=False, default=False)
+    date_consentement           = Column(DateTime, nullable=True)  # horodatage du consentement
+
     # Relation ORM vers le profil nageur
     nageur = relationship("Nageur", backref="utilisateur")
+
+
+class AuditLog(Base):
+    """
+    Journal d'audit RGPD — trace chaque accès à une donnée de santé.
+    Conservé 6 ans (exigence légale Article 30 RGPD).
+    Jamais supprimé via les routes normales — admin BDD uniquement.
+    """
+    __tablename__ = "audit_logs"
+
+    id             = Column(Integer, primary_key=True, index=True)
+
+    # Qui a fait l'action ?
+    utilisateur_id = Column(Integer, ForeignKey("utilisateurs.id", ondelete="SET NULL"), nullable=True)
+    email          = Column(String, nullable=True)   # conservé même si compte supprimé
+    role           = Column(String, nullable=True)
+
+    # Quelle action ?
+    methode        = Column(String, nullable=False)  # GET, POST, PUT, DELETE
+    route          = Column(String, nullable=False)  # ex: /biometries/3
+    statut_http    = Column(Integer, nullable=True)  # 200, 201, 403...
+
+    # Contexte
+    ip_adresse     = Column(String, nullable=True)
+    horodatage     = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+    # Données concernées (pour les routes santé)
+    # ex: "biometrie#3 — nageur#1"
+    ressource      = Column(String, nullable=True)
