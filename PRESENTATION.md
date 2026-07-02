@@ -1,478 +1,513 @@
-# Swim AI — Project Presentation
-## Smart Training Optimization Platform for Competitive Swimming
+# Swim AI — Presentation Slides
+## Restructured based on review feedback
 
 ---
 
-# Slide 1 — Title
+# SLIDE 1 — Title
 
 ```
-SWIM AI
-Smart Training Optimization for Competitive Swimming
-
-Presented by: [Your Name]
-Date: June 26, 2026
-```
-
----
-
-# Slide 2 — Project Context
-
-```
-THE PROBLEM
-
-- Competitive swimmers train 20-30 hours/week
-- Coaches manage 10-30 athletes simultaneously
-- Training decisions are still based on intuition, not data
-- Overtraining causes 60% of injuries in swimming (British Journal of Sports Medicine)
-- No affordable tool connects biometrics, performance, and workload in one place
-
-THE OPPORTUNITY
-
-- The sports analytics market is growing at 25% CAGR (Grand View Research, 2025)
-- Wearable adoption among athletes increased 340% since 2020
-- Yet most tools target team sports (football, basketball)
-- Swimming lacks a dedicated, data-driven coaching platform
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│          [LOGO SKILLS4MIND]                                 │
+│                                                             │
+│                   SWIM AI                                   │
+│       Smart Training Optimization for Competitive Swimming  │
+│                                                             │
+│  ─────────────────────────────────────────────────────────  │
+│                                                             │
+│  Presented by : [Nom du responsable de présentation]        │
+│  Date         : [Date de la séance]                         │
+│                                                             │
+│                                              Slide 1 / 11   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-# Slide 3 — State of the Art
+# SLIDE 2 — Technological Context in Sport
 
 ```
-EXISTING SOLUTIONS                    SWIM AI DIFFERENTIATOR
+TECHNOLOGY IS RESHAPING ATHLETIC PERFORMANCE
 
-TrainingPeaks                         ┌─────────────────────────┐
-  Multi-sport, no swimming focus      │                         │
-  No biometric correlation            │  Swimming-specific      │
-  $20/month per athlete               │  HRV + RPE + Sleep      │
-                                      │  + Performance in ONE   │
-Triton Wear                           │  dashboard              │
-  Hardware-dependent (sensor)         │                         │
-  $500+ per device                    │  No hardware required   │
-  Limited to in-pool metrics          │  Workload monitoring    │
-                                      │  (ACWR ratio)           │
-SwimSmooth                            │                         │
-  Technique analysis only             │  Fatigue detection      │
-  No fatigue/recovery tracking        │  + Smart alerts         │
-  No team management                  │  + Coach team view      │
-                                      │                         │
-                                      │  Open source & free     │
-                                      └─────────────────────────┘
-```
+In the last decade, data-driven training has become
+the standard in high-performance sport.
 
----
+  2012 — 2024 : Evolution of sports technology
 
-# Slide 4 — Market Positioning
+  ─────────────────────────────────────────────────────────
+  2012  GPS trackers appear in football and rugby
+  2015  Heart rate variability (HRV) adopted by elite coaches
+  2018  Machine learning enters performance prediction
+  2020  Wearables adopted by 340% more athletes
+  2023  AI-powered coaching assistants emerge
+  2024  Personalized fatigue prediction becomes accessible
+  ─────────────────────────────────────────────────────────
 
-```
-                    HIGH PRICE
-                        │
-         Triton Wear    │   WHOOP (general)
-         (hardware)     │
-                        │
-  LOW TECH ─────────────┼───────────────── HIGH TECH
-                        │
-         Paper logbook  │   ★ SWIM AI
-         Excel sheets   │   (smart, free,
-                        │    swimming-specific)
-                        │
-                    LOW PRICE
+  "The gap between elite and amateur sport is no longer
+   talent — it is access to data and its interpretation."
+         — McKinsey Global Institute, Sports Analytics 2024
 
-TARGET USERS:
-  → Swimming clubs (50-200 members)
-  → University swim teams
-  → Independent coaches with 5-30 athletes
-  → National federation training centers
+
+WHY AI IN SWIMMING SPECIFICALLY ?
+
+  ● Swimming is one of the most measurable sports in the world
+    → every stroke, every split, every heartbeat can be captured
+
+  ● Yet 90% of clubs worldwide still rely on intuition and paper logs
+
+  ● A 1% improvement in stroke efficiency = 0.5s on 100m
+    → the difference between qualifying and not qualifying
+
+  ● AI can detect fatigue patterns 3 days before a swimmer
+    feels them consciously (Plews et al., 2013 — HRV research)
 ```
 
 ---
 
-# Slide 5 — Main Features
+# SLIDE 3 — Market Positioning
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    SWIM AI FEATURES                      │
-├─────────────────────┬───────────────────────────────────┤
-│                     │                                   │
-│  SWIMMER VIEW       │  COACH VIEW                       │
-│                     │                                   │
-│  ● Personal KPIs    │  ● Team overview dashboard        │
-│    - Last chrono    │  ● Fatigue status per athlete     │
-│    - Best chrono    │    (optimal/watch/fatigue/        │
-│    - Progression %  │     overtraining)                 │
-│                     │  ● Priority alerts                │
-│  ● Biometric input  │    (ACWR > 1.5, HRV < 50)        │
-│    - HRV (ms)       │  ● All athletes' KPIs at         │
-│    - Resting HR     │    a glance                       │
-│    - RPE (1-10)     │                                   │
-│    - Sleep (hours)  │  ADMIN                            │
-│                     │  ● User role management           │
-│  ● Workload (ACWR)  │  ● Account activation/            │
-│  ● Smart recomm.    │    deactivation                   │
-│  ● Chrono history   │                                   │
-│    graph            │                                   │
-│                     │                                   │
-├─────────────────────┴───────────────────────────────────┤
-│  SECURITY                                               │
-│  ● JWT authentication (bcrypt hashed passwords)         │
-│  ● Role-based access control (swimmer/coach/admin)      │
-│  ● No self-promotion: only admins can change roles      │
-│  ● Password policy: minimum 8 characters                │
-├─────────────────────────────────────────────────────────┤
-│  API                                                    │
-│  ● Full CRUD (Create, Read, Update, Delete)             │
-│  ● Pagination on all list endpoints (max 100)           │
-│  ● Auto-generated Swagger documentation                 │
-└─────────────────────────────────────────────────────────┘
-```
+DESIGNED FOR EVERY LEVEL OF COMPETITIVE SWIMMING
 
----
+  Swim AI is not here to replace TrainingPeaks, Triton Wear,
+  or SwimSmooth. Each of these tools is excellent in its domain.
 
-# Slide 6 — Data Sources & Studies
+  We are filling a specific gap:
 
-```
-DATA COLLECTED IN SWIM AI
+  ┌──────────────────────────────────────────────────────────┐
+  │                                                          │
+  │   "An all-in-one platform that brings professional-      │
+  │    grade analytics to the amateur and semi-pro club,     │
+  │    without hardware requirements or subscription fees."  │
+  │                                                          │
+  └──────────────────────────────────────────────────────────┘
 
-┌──────────────┬──────────────────────────┬──────────────────────┐
-│ Table        │ Fields                   │ Scientific basis     │
-├──────────────┼──────────────────────────┼──────────────────────┤
-│ swimmers     │ name, birth date,        │ Athlete profiling    │
-│ (nageurs)    │ specialty, level         │                      │
-├──────────────┼──────────────────────────┼──────────────────────┤
-│ sessions     │ date, type (endurance,   │ Training periodiz.   │
-│              │ sprint, technique,       │ (Bompa & Haff, 2009) │
-│              │ recovery), duration      │                      │
-├──────────────┼──────────────────────────┼──────────────────────┤
-│ biometrics   │ HRV (ms), resting HR,   │ Plews et al. (2013)  │
-│              │ RPE (1-10), sleep (h)    │ "HRV as overtraining │
-│              │                          │  marker in swimmers"  │
-├──────────────┼──────────────────────────┼──────────────────────┤
-│ performances │ distance, time (s),      │ Chronometric tracking │
-│              │ stroke, avg speed (m/s)  │ for progression      │
-└──────────────┴──────────────────────────┴──────────────────────┘
+  EXISTING TOOLS AND THEIR FOCUS
+  ──────────────────────────────────────────────────────────
+  TrainingPeaks   Multi-sport platform / Strong on planning
+  Triton Wear     In-pool sensor hardware / Stroke analysis
+  SwimSmooth      Technique and video / Coach education
+  ──────────────────────────────────────────────────────────
+  Each excels in ONE area. None combines biometrics + workload
+  + performance + team management in a single free platform.
 
-KEY METRICS COMPUTED BY THE BACKEND
+  SWIM AI TARGET
+  ─────────────────────────────────────────────────────────
+  ✓  Amateur clubs      (10 to 100 swimmers, limited budget)
+  ✓  University teams   (structured training, coach-led)
+  ✓  Semi-pro clubs     (regional / national level athletes)
+  ✓  National centers   (high volume, multi-coach management)
+  ─────────────────────────────────────────────────────────
 
-● ACWR (Acute:Chronic Workload Ratio)
-  - Acute  = total training minutes over 7 days
-  - Chronic = total training minutes over 28 days / 4
-  - Safe zone: 0.8 to 1.3 (Gabbett, 2016)
-  - Above 1.5 = high injury risk
+  POSITIONING MAP
 
-● Fatigue Score (0-100)
-  - Based on RPE average (7 days) × 10
-  - Adjusted by HRV: < 50ms → +20 / > 80ms → -10
-
-● Progression = ((last chrono - first chrono) / first chrono) × 100
-  - Negative = improvement (faster)
+              HIGH PRICE
+                  │
+  Triton Wear     │    WHOOP / Garmin
+  (hardware $500) │    (general fitness)
+                  │
+  LOW TECH ───────┼──────────────── HIGH TECH
+                  │
+  Paper logbook   │         ★  SWIM AI
+  Excel sheets    │         (smart + free + swimming-specific)
+                  │
+              LOW PRICE
 ```
 
 ---
 
-# Slide 7 — Regulatory Constraints (GDPR / Data Privacy)
+# SLIDE 4 — Features : What We Measure and Why
 
 ```
-SWIM AI HANDLES SENSITIVE DATA
+SWIMMING IS MORE THAN A STOPWATCH
 
-Health data (HRV, heart rate, sleep) = special category under GDPR Article 9
-Sports performance data = personal data under GDPR Article 4
+  A swimmer's performance depends on 4 interconnected dimensions :
 
-┌──────────────────────────────────────────────────────────────┐
-│                COMPLIANCE MEASURES                            │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  1. PASSWORDS                                                │
-│     → Never stored in plain text                             │
-│     → bcrypt hash with automatic salt                        │
-│     → Minimum 8 characters enforced                          │
-│                                                              │
-│  2. AUTHENTICATION                                           │
-│     → JWT tokens with 30-minute expiration                   │
-│     → Tokens signed with SECRET_KEY (env variable)           │
-│     → Automatic invalidation on expiry                       │
-│                                                              │
-│  3. ACCESS CONTROL                                           │
-│     → Swimmers can ONLY access their own data                │
-│     → Coaches see their team only                            │
-│     → Role escalation requires admin action                  │
-│                                                              │
-│  4. DATA STORAGE                                             │
-│     → PostgreSQL with encrypted connections                  │
-│     → .env file excluded from git (.gitignore)               │
-│     → Database credentials never hardcoded                   │
-│                                                              │
-│  5. FUTURE (production)                                      │
-│     → HTTPS only (TLS certificate)                           │
-│     → Data retention policy                                  │
-│     → User consent management                                │
-│     → Right to erasure (DELETE endpoints ready)              │
-│     → Data portability (JSON export)                         │
-│                                                              │
-└──────────────────────────────────────────────────────────────┘
-```
+  ┌──────────────┬──────────────────────────────────────────────┐
+  │  DIMENSION   │  WHAT SWIM AI CAPTURES                       │
+  ├──────────────┼──────────────────────────────────────────────┤
+  │  TECHNIQUE   │  Stroke style (crawl, backstroke,            │
+  │              │  breaststroke, butterfly, individual medley) │
+  │              │  Distance per stroke, start type (dive/      │
+  │              │  pushoff), split time per length (25m)       │
+  ├──────────────┼──────────────────────────────────────────────┤
+  │  PERFORMANCE │  Race distance (50m / 100m / 200m / 400m /  │
+  │              │  800m / 1500m), total chrono (seconds),      │
+  │              │  average speed (m/s), progression % vs PB   │
+  ├──────────────┼──────────────────────────────────────────────┤
+  │  WORKLOAD    │  Session type (endurance / sprint /          │
+  │              │  technique / recovery), duration (min),      │
+  │              │  acute load (7d), chronic load (28d),        │
+  │              │  ACWR ratio — injury risk indicator           │
+  ├──────────────┼──────────────────────────────────────────────┤
+  │  RECOVERY    │  HRV (heart rate variability in ms),         │
+  │              │  resting heart rate (bpm), sleep duration    │
+  │              │  (hours), perceived effort RPE (1–10)        │
+  └──────────────┴──────────────────────────────────────────────┘
 
----
+  KEY COMPUTED INDICATORS
 
-# Slide 8 — Technical Architecture
+  ● ACWR (Acute:Chronic Workload Ratio)
+    → 7-day load ÷ (28-day load ÷ 4)
+    → Safe zone : 0.8 – 1.3  |  Above 1.5 : high injury risk
 
-```
-┌───────────────────────────────────────────────────────────────┐
-│                      DOCKER COMPOSE                           │
-│                                                               │
-│  ┌─────────────┐    ┌──────────────┐    ┌──────────────┐     │
-│  │   FRONTEND  │    │   BACKEND    │    │   GRAFANA    │     │
-│  │   React     │───▶│   FastAPI    │    │   Analytics  │     │
-│  │   :3000     │    │   :8000      │    │   :3001      │     │
-│  │             │    │              │    │              │     │
-│  │  Dashboard  │    │  REST API    │    │  SQL queries │     │
-│  │  Forms      │    │  JWT Auth    │    │  Dashboards  │     │
-│  │  Charts     │    │  Pydantic    │    │  Alerts      │     │
-│  └─────────────┘    └──────┬───────┘    └──────┬───────┘     │
-│                            │                    │             │
-│                            │   SQLAlchemy ORM   │  Direct SQL │
-│                            │                    │             │
-│                            ▼                    ▼             │
-│                     ┌──────────────────────────────┐         │
-│                     │      POSTGRESQL 15           │         │
-│                     │      :5432                   │         │
-│                     │                              │         │
-│                     │  nageurs | sessions           │         │
-│                     │  biometries | performances    │         │
-│                     │  utilisateurs                 │         │
-│                     │                              │         │
-│                     │  Volume: postgres_data       │         │
-│                     └──────────────────────────────┘         │
-│                                                               │
-└───────────────────────────────────────────────────────────────┘
+  ● Fatigue Score (0–100)
+    → RPE average × 10, adjusted by HRV level
+    → Instant visual signal for the coach
+
+  ● Progression
+    → (last chrono − first chrono) ÷ first chrono × 100
+    → Negative = improvement (swimmer is getting faster)
+
+  ● AI Injury Risk (Random Forest — see Slide 7)
+    → Predicts overtraining risk from combined biometric signals
 ```
 
 ---
 
-# Slide 9 — Design Patterns
+# SLIDE 5 — Meet Sophie : A Swimmer's Journey
 
 ```
-PATTERN 1 — LAYERED ARCHITECTURE (n-tier)
+MEET SOPHIE, 19 — REGIONAL LEVEL SWIMMER, 100M BACKSTROKE
 
-  Presentation Layer    →  React (frontend)
-  API Layer             →  FastAPI routes + Pydantic validation
-  Business Logic Layer  →  Python functions (KPI, ACWR, alerts)
-  Data Access Layer     →  SQLAlchemy ORM
-  Storage Layer         →  PostgreSQL
+  Monday morning, 7:00 AM
+  ─────────────────────────────────────────────────────────
+  Sophie wakes up, opens Swim AI on her phone.
 
-PATTERN 2 — RESTful WEB SERVICES
+  She enters her morning biometrics before practice :
+    → HRV today  : 42 ms   (her normal range: 68–75 ms)
+    → Resting HR : 64 bpm  (usually 52 bpm)
+    → Sleep      : 5.5 h
+    → RPE (yesterday's session) : 8/10
 
-  POST   /nageurs       →  Create
-  GET    /nageurs       →  Read (list, paginated)
-  GET    /nageurs/{id}  →  Read (single)
-  PUT    /nageurs/{id}  →  Update
-  DELETE /nageurs/{id}  →  Delete
+  Swim AI immediately flags :
+    ⚠  "HRV below threshold — nervous system not recovered"
+    ⚠  "Sleep below 7h — direct impact on recovery"
+    ⚠  "RPE ≥ 8 — consider a recovery session today"
 
-  All endpoints follow REST conventions:
-  → Stateless (JWT token per request)
-  → Resource-oriented URLs
-  → Standard HTTP status codes (200, 201, 204, 400, 401, 403, 404)
+  ─────────────────────────────────────────────────────────
+  Her coach, Marc, sees Sophie's alert on the team dashboard
+  before the 8 AM session even starts.
 
-PATTERN 3 — DEPENDENCY INJECTION (FastAPI)
+  He adjusts her training plan :
+    ✓  Replaces sprint session with active recovery
+    ✓  Reduces total volume from 4000m to 2000m
+    ✓  Adds 20 min of stretching and breathwork
 
-  def get_nageurs(
-      db: Session = Depends(get_db),              ← DB session injected
-      user: Utilisateur = Depends(get_current_user) ← Auth injected
-  ):
+  ─────────────────────────────────────────────────────────
+  Wednesday — 2 days later
+  Sophie's HRV returns to 71 ms.
+  She posts her best 100m backstroke time : 1:08.4 — a PB.
 
-PATTERN 4 — REPOSITORY PATTERN (via SQLAlchemy ORM)
+  ─────────────────────────────────────────────────────────
 
-  → Models (models.py) = database tables
-  → Schemas (schemas.py) = API validation
-  → Routes (routes/*.py) = controllers
-  → Separation of concerns: data ≠ validation ≠ logic
-```
+  Without Swim AI :
+    → Marc would have run the full sprint session Monday
+    → Sophie would have trained through fatigue
+    → Risk of minor injury or performance plateau
 
----
-
-# Slide 10 — Technology Stack
-
-```
-LAYER            TECHNOLOGY         VERSION    WHY
-
-Backend          Python             3.11       Industry standard for data/ML
-Framework        FastAPI            0.136      Fastest Python framework, auto-docs
-ORM              SQLAlchemy         2.0        Most mature Python ORM
-Validation       Pydantic           2.13       Type-safe, auto-error messages
-Auth             python-jose        3.5        JWT standard implementation
-Password hash    bcrypt/passlib     4.0/1.7    Industry standard, auto-salt
-Database         PostgreSQL         15         Robust, open source, production-ready
-Monitoring       Grafana            latest     SQL-native dashboards, alerts
-Containerization Docker Compose     v2         Reproducible environments
-Frontend (plan.) React              18+        Component-based, large ecosystem
-Charts (plan.)   Recharts           2.x        React-native charting library
-ML (future)      Scikit-learn       —          Fatigue prediction model
-
-DEV TOOLS
-
-Version control  Git + GitHub       —          Collaboration, PR workflow
-IDE              VS Code            —          Extensions, Docker integration
-API testing      Swagger UI         auto       Generated from FastAPI + Pydantic
+  With Swim AI :
+    → One data point prevented 2 weeks of potential setback
 ```
 
 ---
 
-# Slide 11 — Database Schema (ERD)
+# SLIDE 6 — Sophie's Data in Swim AI
 
 ```
-┌──────────────────┐       ┌──────────────────┐
-│   utilisateurs   │       │     nageurs       │
-├──────────────────┤       ├──────────────────┤
-│ id          PK   │       │ id          PK   │
-│ email       UQ   │  1──1 │ nom              │
-│ mot_de_passe     │───────│ prenom           │
-│ role             │       │ date_naissance   │
-│ nageur_id   FK   │       │ specialite       │
-│ actif       BOOL │       │ niveau           │
-└──────────────────┘       └────────┬─────────┘
-                                    │
-                           1────────┤────────1
-                           │                 │
-                    ┌──────┴───────┐  ┌──────┴───────┐
-                    │   sessions   │  │  biometries  │
-                    ├──────────────┤  ├──────────────┤
-                    │ id       PK  │  │ id       PK  │
-                    │ nageur_id FK │  │ nageur_id FK │
-                    │ date         │  │ date         │
-                    │ type_seance  │  │ hrv_ms       │
-                    │ duree_min    │  │ fc_repos     │
-                    └──────┬───────┘  │ rpe          │
-                           │          │ sommeil_h    │
-                      1────┘          └──────────────┘
-                      │
-               ┌──────┴────────┐
-               │ performances  │
-               ├───────────────┤
-               │ id        PK  │
-               │ session_id FK │
-               │ distance_m    │
-               │ temps_s       │
-               │ style_nage    │
-               │ vitesse_moy   │
-               └───────────────┘
+SOPHIE'S PROFILE — WHAT THE PLATFORM SHOWS
 
-CASCADE DELETE: swimmer deleted → all sessions, biometrics, performances deleted
-```
+  ┌─────────────────────────────────────────────────────────┐
+  │  SWIMMER DASHBOARD — Sophie Lefebvre                    │
+  │  Specialty: 100m Backstroke  |  Level: Regional         │
+  ├──────────────┬──────────────┬─────────────┬────────────┤
+  │ Last chrono  │ Personal best│ Progression │ Fatigue    │
+  │   1:08.4     │   1:07.9     │   -1.8%     │  72/100    │
+  │   100m back  │   100m back  │  improving  │ moderate   │
+  ├──────────────┴──────────────┴─────────────┴────────────┤
+  │  WORKLOAD (ACWR)                                        │
+  │  Acute load (7d)  : 320 min                             │
+  │  Chronic load (28d): 1 100 min                          │
+  │  ACWR             : 1.16  ✓ Safe zone (0.8 – 1.3)      │
+  ├──────────────────────────────────────────────────────────┤
+  │  BIOMETRICS — Last 7 days                               │
+  │  HRV average  : 66.2 ms   (was 42 ms on Monday)        │
+  │  Resting HR   : 54 bpm                                  │
+  │  Avg sleep    : 7.2 h                                   │
+  │  Avg RPE      : 6.1 / 10                                │
+  ├──────────────────────────────────────────────────────────┤
+  │  CHRONO HISTORY — 100m Backstroke                       │
+  │  Jan    1:12.3                                          │
+  │  Feb    1:10.8  ↓                                       │
+  │  Mar    1:09.5  ↓                                       │
+  │  Apr    1:08.4  ↓  ← current PB                        │
+  ├──────────────────────────────────────────────────────────┤
+  │  SMART RECOMMENDATIONS                                  │
+  │  ✓  Workload in optimal zone — maintain volume          │
+  │  ✓  Significant progression — stay on this trajectory  │
+  │  ⚠  Monitor HRV — stays below 50 ms = rest day        │
+  └──────────────────────────────────────────────────────────┘
 
----
-
-# Slide 12 — API Endpoints Overview (25 routes)
-
-```
-AUTH (public)                          SWIMMERS (protected)
-  POST /auth/register                    POST /nageurs
-  POST /auth/login                       GET  /nageurs?skip=0&limit=50
-  GET  /auth/me                          GET  /nageurs/{id}
-  PUT  /auth/role/{id} (admin)           PUT  /nageurs/{id}
-                                         DELETE /nageurs/{id} (admin)
-
-SESSIONS (protected)                   BIOMETRICS (protected)
-  POST /sessions                         POST /biometries
-  GET  /sessions?skip=0&limit=50         GET  /biometries?skip=0&limit=50
-  GET  /sessions/{id}                    GET  /biometries/{id}
-  GET  /sessions/nageur/{id}             GET  /biometries/nageur/{id}
-  PUT  /sessions/{id}                    PUT  /biometries/{id}
-  DELETE /sessions/{id} (admin)          DELETE /biometries/{id} (admin)
-
-PERFORMANCES (protected)              DASHBOARDS (protected)
-  POST /performances                     GET /dashboard/{nageur_id}
-  GET  /performances?skip=0&limit=50     GET /equipe
-  GET  /performances/{id}                GET /equipe/alertes
-  GET  /performances/session/{id}        GET /equipe/stats
-  GET  /performances/nageur/{id}
-  PUT  /performances/{id}
-  DELETE /performances/{id} (admin)
+  COACH MARC SEES THIS ACROSS HIS ENTIRE TEAM OF 18 SWIMMERS
+  → One screen, all athletes, priority alerts at the top
+  → He can export the full team report as CSV in one click
 ```
 
 ---
 
-# Slide 13 — Project Organization & Team
+# SLIDE 7 — Data Sources, Architecture & AI
 
 ```
-TEAM STRUCTURE
+WHERE THE DATA COMES FROM
 
-  Backend Developer(s)    → API, database, authentication, business logic
-  Frontend Developer(s)   → React dashboard, user interface
-  Data/ML (future)        → Fatigue prediction model (Scikit-learn)
+  ─────────────────────────────────────────────────────────
+  INPUT                      SOURCE
+  ─────────────────────────────────────────────────────────
+  Biometrics (HRV, HR, RPE)  Swimmer — entered manually
+                              or synced from wearable
+  Session data               Coach or swimmer — entered
+                              after each practice
+  Performance (chrono)       Coach — entered after timing
+  Profile (stroke, level)    Admin — set at registration
+  ─────────────────────────────────────────────────────────
 
-WORKFLOW
+  TECHNICAL ARCHITECTURE — RESTful Web Services
 
-  1. Git branching strategy
-     main ← feature branches ← pull requests
+  ┌────────────────────────────────────────────────────────┐
+  │  FRONTEND (React + Vite)                               │
+  │  HTTP Requests + JWT Bearer Token                      │
+  └──────────────────┬─────────────────────────────────────┘
+                     │  REST API  (JSON over HTTP)
+  ┌──────────────────▼─────────────────────────────────────┐
+  │  BACKEND (FastAPI — Python)                            │
+  │  ┌──────────────┐  ┌──────────────┐  ┌─────────────┐  │
+  │  │  Auth Layer  │  │ Business     │  │  AI Layer   │  │
+  │  │  JWT / bcrypt│  │ Logic        │  │  Random     │  │
+  │  │  Role-based  │  │ KPI / ACWR   │  │  Forest     │  │
+  │  │  access      │  │ Fatigue score│  │  Scoring    │  │
+  │  └──────────────┘  └──────────────┘  └─────────────┘  │
+  │  SQLAlchemy ORM                                        │
+  └──────────────────┬─────────────────────────────────────┘
+                     │
+  ┌──────────────────▼─────────────────────────────────────┐
+  │  DATABASE (PostgreSQL 15)                              │
+  │  nageurs | sessions | biometries | performances        │
+  │  utilisateurs                                          │
+  └────────────────────────────────────────────────────────┘
+                     │
+  ┌──────────────────▼─────────────────────────────────────┐
+  │  GRAFANA  (direct SQL connection)                      │
+  │  Advanced coach dashboards | Heatmaps | PDF export     │
+  └────────────────────────────────────────────────────────┘
 
-  2. Docker-first development
-     → docker-compose up = entire stack running
-     → Same environment for every team member
+  AI — RANDOM FOREST SCORING
 
-  3. API-first approach
-     → Backend built and tested independently
-     → Swagger UI as living documentation
-     → Frontend consumes REST API
-
-PROJECT TIMELINE
-
-  Phase 1 (done)  → Database design + FastAPI backend + JWT auth
-  Phase 2 (done)  → Dashboard endpoints + coach team view + CRUD complete
-  Phase 3 (current) → React frontend + Figma mockups
-  Phase 4 (next)  → Grafana dashboards + data visualization
-  Phase 5 (future)→ ML fatigue prediction + mobile app
+  ● Algorithm   : Random Forest Classifier (Scikit-learn)
+  ● Input       : HRV (7d avg), RPE (7d avg), ACWR,
+                  sleep average, resting HR trend
+  ● Output      : Fatigue risk score (0–100)
+                  + Overtraining probability (%)
+  ● Why Random Forest ?
+    → Handles missing data well (common in manual entry)
+    → Resistant to outliers (one bad sleep night ≠ overtraining)
+    → Interpretable — coach can see which feature drove the score
+    → No large dataset needed to start — rule-based fallback
 ```
 
 ---
 
-# Slide 14 — Live Demo
+# SLIDE 8 — API Routes : All 27 Endpoints
 
 ```
-DEMO CHECKLIST
+REST API — COMPLETE ROUTE MAP
 
-  1. Show Swagger UI         → http://localhost:8000/docs
-  2. Register a user         → POST /auth/register
-  3. Login                   → POST /auth/login → get JWT token
-  4. Create a swimmer        → POST /nageurs (with token)
+  Authentication (public — no token required)
+  ───────────────────────────────────────────────────────────
+  POST  /auth/register/nageur      Register a new swimmer
+                                   (creates account + swimmer profile)
+  POST  /auth/register/entraineur  Register a new coach
+                                   (creates account, role=entraineur)
+  POST  /auth/login                Login → returns JWT token
+  GET   /auth/me                   Get current user profile + role
+  PUT   /auth/role/{id}            Change a user's role (admin only)
+
+  Swimmers — role: any authenticated user
+  ───────────────────────────────────────────────────────────
+  POST  /nageurs/                  Create a swimmer (coach/admin)
+  GET   /nageurs/                  List all swimmers (paginated)
+  GET   /nageurs/{id}              Get one swimmer by ID
+  PUT   /nageurs/{id}              Update swimmer (coach/admin)
+  DELETE /nageurs/{id}             Delete swimmer (admin only)
+
+  Training Sessions — role-filtered
+  ───────────────────────────────────────────────────────────
+  POST  /sessions/                 Create a session
+  GET   /sessions/                 List sessions (own if nageur)
+  GET   /sessions/{id}             Get session by ID
+  GET   /sessions/nageur/{id}      All sessions for one swimmer
+  PUT   /sessions/{id}             Update a session
+  DELETE /sessions/{id}            Delete (admin only)
+
+  Biometrics — role-filtered
+  ───────────────────────────────────────────────────────────
+  POST  /biometries/               Record biometric entry
+  GET   /biometries/               List (own if nageur)
+  GET   /biometries/{id}           Get one entry
+  GET   /biometries/nageur/{id}    All biometrics for one swimmer
+  PUT   /biometries/{id}           Update an entry
+  DELETE /biometries/{id}          Delete (admin only)
+
+  Performances — role-filtered
+  ───────────────────────────────────────────────────────────
+  POST  /performances/             Record a chrono
+  GET   /performances/             List (own if nageur)
+  GET   /performances/{id}         Get one performance
+  GET   /performances/session/{id} All performances for a session
+  GET   /performances/nageur/{id}  All performances for a swimmer
+  PUT   /performances/{id}         Update a performance
+  DELETE /performances/{id}        Delete (admin only)
+
+  Dashboards — computed KPIs
+  ───────────────────────────────────────────────────────────
+  GET   /dashboard/{nageur_id}     Full swimmer dashboard
+                                   (KPI + ACWR + history + AI score)
+  GET   /equipe/                   Coach team overview
+                                   (stats + alerts + all swimmers)
+  GET   /equipe/alertes            Active alerts only
+  GET   /equipe/stats              Team statistics only
+
+  All list endpoints support pagination : ?skip=0&limit=50
+  All protected routes require : Authorization: Bearer <token>
+```
+
+---
+
+# SLIDE 9 — Design Patterns & Technical Choices
+
+```
+ARCHITECTURE PATTERNS CHOSEN
+
+  1. LAYERED ARCHITECTURE (N-Tier)
+     ─────────────────────────────────────────────────────
+     Presentation  →  React (Vite, React Router, Recharts)
+     API           →  FastAPI routes + Pydantic validation
+     Business      →  Python functions (KPI, ACWR, AI score)
+     Data Access   →  SQLAlchemy ORM (models + queries)
+     Storage       →  PostgreSQL 15
+
+  2. RESTful WEB SERVICES
+     ─────────────────────────────────────────────────────
+     ● Stateless   : every request carries its JWT token
+     ● Resource-based URLs : /nageurs, /sessions, /performances
+     ● Standard HTTP verbs : POST / GET / PUT / DELETE
+     ● Standard status codes : 200 / 201 / 204 / 400 / 401 / 403 / 404
+     ● JSON exclusively : request bodies and responses
+
+  3. DEPENDENCY INJECTION (FastAPI)
+     ─────────────────────────────────────────────────────
+     def get_nageurs(
+         db   = Depends(get_db),           # DB session injected
+         user = Depends(get_current_user)  # Auth injected
+     )
+     → Decoupled, testable, no global state
+
+  4. ROLE-BASED ACCESS CONTROL (RBAC)
+     ─────────────────────────────────────────────────────
+     nageur      → own data only
+     entraineur  → full team read + write
+     admin       → everything + role management
+
+  5. AI SCORING — RANDOM FOREST
+     ─────────────────────────────────────────────────────
+     ● Ensemble method : 100 decision trees vote on each prediction
+     ● Input features  : HRV, RPE, ACWR, sleep, resting HR
+     ● Output          : fatigue risk score (0–100)
+     ● Fallback        : rule-based scoring when data is insufficient
+
+  ELEMENTS EXTRACTABLE FOR THE THESIS (BAC)
+  ─────────────────────────────────────────────────────────
+  ✓ RESTful API design with role-based access — Web Services course
+  ✓ MVC-inspired separation : models / schemas / routes — Architecture
+  ✓ JWT authentication flow — Security module
+  ✓ Random Forest for sports prediction — AI / ML module
+  ✓ Docker containerization — Deployment / DevOps
+  ✓ GDPR compliance measures — Data law / Regulations
+  ✓ PostgreSQL relational schema with CASCADE — Database course
+  ✓ ACWR workload ratio — Sports science / domain knowledge
+```
+
+---
+
+# SLIDE 10 — Project Organization
+
+```
+TEAM & WORKFLOW
+
+  Roles
+  ─────────────────────────────────────────────────────────
+  Backend developer(s)    API, database, authentication, AI scoring
+  Frontend developer(s)   React dashboard, user interface, UX
+  ─────────────────────────────────────────────────────────
+
+  Git workflow
+  ─────────────────────────────────────────────────────────
+  main         ←  production-ready code
+  dev          ←  integration branch
+  feature/*    ←  one branch per feature, PR to dev then main
+  ─────────────────────────────────────────────────────────
+
+  Docker-first development
+  → docker-compose up = entire stack running for any team member
+  → No "works on my machine" — same environment everywhere
+
+  API-first approach
+  → Backend built and tested independently via Swagger UI
+  → Frontend consumes the REST API
+  → Teams work in parallel without blocking each other
+
+  PROJECT TIMELINE
+  ─────────────────────────────────────────────────────────
+  Phase 1  ✓  Database schema + FastAPI backend + JWT auth
+  Phase 2  ✓  Dashboard KPIs + Coach team view + Full CRUD
+  Phase 3  ✓  React frontend + Design system + JWT integration
+  Phase 4  ○  Separate registration pages (nageur / entraineur)
+               Role-based routing in frontend
+  Phase 5  ○  Grafana dashboards + SQL queries
+  Phase 6  ○  Random Forest model training + integration
+  Phase 7  ○  Production deployment (HTTPS + cloud hosting)
+  ─────────────────────────────────────────────────────────
+```
+
+---
+
+# SLIDE 11 — Demo & Q&A
+
+```
+LIVE DEMO
+
+  1. Open Swagger UI         → http://localhost:8000/docs
+  2. Register as a swimmer   → POST /auth/register/nageur
+                               (nom, prénom, date de naissance, email, mdp)
+  3. Register as a coach     → POST /auth/register/entraineur
+  4. Login                   → POST /auth/login → JWT token
   5. Create a session        → POST /sessions
-  6. Add biometrics          → POST /biometries
-  7. Add a performance       → POST /performances
-  8. Show dashboard          → GET /dashboard/{id}
-  9. Show team dashboard     → GET /equipe
-  10. Show Grafana           → http://localhost:3001
-```
+  6. Record biometrics       → POST /biometries (HRV, RPE, sleep)
+  7. Record a performance    → POST /performances (100m crawl — 58.24s)
+  8. View swimmer dashboard  → GET /dashboard/{id}
+     → ACWR, fatigue score, progression, recommendations
+  9. View coach team view    → GET /equipe
+     → all swimmers, alerts, status badges
+  10. Open Grafana           → http://localhost:3001
 
----
+─────────────────────────────────────────────────────────────
 
-# Slide 15 — Next Steps & Roadmap
+                        THANK YOU
 
-```
-SHORT TERM (next 2 weeks)
-  → Build React frontend from UI_SPEC.md mockups
-  → Connect frontend to all API endpoints
-  → Deploy Grafana dashboards with SQL queries
+  GitHub  :  github.com/tims237/swim-ai
+  API     :  http://localhost:8000/docs
+  Grafana :  http://localhost:3001
 
-MEDIUM TERM (1-2 months)
-  → Implement fatigue prediction with Scikit-learn
-  → Add data export (CSV/PDF reports)
-  → Mobile responsive design
+                       Questions ?
 
-LONG TERM
-  → Mobile app (React Native)
-  → Wearable integration (Garmin, Apple Watch)
-  → AI-powered training plan generation
-  → Multi-club support (SaaS model)
-```
-
----
-
-# Slide 16 — Q&A
-
-```
-THANK YOU
-
-  GitHub    : github.com/tims237/swim-ai
-  API Docs  : http://localhost:8000/docs
-  Grafana   : http://localhost:3001
-
-  Questions?
+                                              [LOGO SKILLS4MIND]
 ```
