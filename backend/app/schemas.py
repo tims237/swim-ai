@@ -265,3 +265,22 @@ class ResetPasswordAdminSchema(BaseModel):
     Un mot de passe temporaire est défini par l'admin, l'utilisateur devra le changer.
     """
     nouveau_mot_de_passe : str  # nouveau mot de passe temporaire — min 8 caractères
+
+
+class ForgotPasswordSchema(BaseModel):
+    """Demande de réinitialisation par email.
+    Route : POST /auth/forgot-password
+    L'API envoie un email avec un lien de réinitialisation valable 30 minutes.
+    Répond toujours 200 même si l'email est inconnu (évite l'énumération d'emails).
+    """
+    email : str
+
+
+class ResetPasswordByTokenSchema(BaseModel):
+    """Réinitialisation via le lien reçu par email.
+    Route : POST /auth/reset-password-by-token
+    Le token est extrait du lien cliqué dans l'email.
+    Usage unique — invalide après utilisation ou après 30 minutes.
+    """
+    token                : str   # token UUID reçu dans l'email
+    nouveau_mot_de_passe : str   # nouveau mot de passe — min 8 caractères

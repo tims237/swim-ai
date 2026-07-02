@@ -23,8 +23,11 @@ from app.auth.security import (
 from app.auth.dependencies import get_current_user, get_current_admin
 from app.database import get_db
 from app.models import Utilisateur
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from app.models import Nageur
+import uuid
+
+from app.models import PasswordResetToken
 from app.schemas import (
     InscriptionSchema,
     InscriptionNageurSchema,
@@ -33,8 +36,11 @@ from app.schemas import (
     UtilisateurResponse,
     ChangeRoleSchema,
     ChangePasswordSchema,
-    ResetPasswordAdminSchema
+    ResetPasswordAdminSchema,
+    ForgotPasswordSchema,
+    ResetPasswordByTokenSchema
 )
+from app.services.email import envoyer_email_reset_password
 
 router = APIRouter(
     prefix="/auth",
@@ -485,4 +491,133 @@ def reinitialiser_mot_de_passe(
 
     # ── 3. Hache et enregistre le nouveau mot de passe ──
     utilisateur.mot_de_passe = hasher_mot_de_passe(data.nouveau_mot_de_passe)
+    db.commit()
+
+
+# ─────────────────────────────────────────
+# MOT DE PASSE OUBLIÉ — FLOW EMAIL
+# ─────────────────────────────────────────
+
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+@limiter.limit("3/minute")
+def mot_de_passe_oublie(
+    request: Request,
+    data: ForgotPasswordSchema,
+    db: Session = Depends(get_db)
+):
+    """
+    Déclenche la procédure de réinitialisation par email.
+    Route publique — pas de token JWT requis.
+
+    Envoie un email contenant un lien de réinitialisation valable 30 minutes.
+    Répond toujours HTTP 200, même si l'email est inconnu.
+    (Sécurité : empêche l'énumération des adresses email enregistrées.)
+
+    - **email** : adresse email du compte à réinitialiser
+    """
+
+    # Réponse générique — toujours renvoyée pour éviter l'énumération
+    reponse_generique = {
+        "message": "Si cet email est enregistré, un lien de réinitialisation a été envoyé."
+    }
+
+    # ── 1. Cherche l'utilisateur (sans révéler s'il existe) ──
+    utilisateur = db.query(Utilisateur).filter(
+        Utilisateur.email == data.email
+    ).first()
+
+    if not utilisateur or not utilisateur.actif:
+        # On répond 200 même si l'email est inconnu — sécurité anti-énumération
+        return reponse_generique
+
+    # ── 2. Invalide les anciens tokens non utilisés de cet utilisateur ──
+    db.query(PasswordResetToken).filter(
+        PasswordResetToken.utilisateur_id == utilisateur.id,
+        PasswordResetToken.utilise == False
+    ).update({"utilise": True})
+
+    # ── 3. Génère un nouveau token UUID ──────────────────────
+    token_valeur = str(uuid.uuid4())
+    expiration   = datetime.now(timezone.utc) + timedelta(minutes=30)
+
+    nouveau_token = PasswordResetToken(
+        token          = token_valeur,
+        utilisateur_id = utilisateur.id,
+        expiration     = expiration,
+        utilise        = False
+    )
+    db.add(nouveau_token)
+    db.commit()
+
+    # ── 4. Envoie l'email ────────────────────────────────────
+    prenom = getattr(utilisateur, "prenom", "utilisateur") or "utilisateur"
+    envoyer_email_reset_password(
+        destinataire = utilisateur.email,
+        prenom       = prenom,
+        token        = token_valeur
+    )
+
+    return reponse_generique
+
+
+@router.post("/reset-password-by-token", status_code=status.HTTP_204_NO_CONTENT)
+def reinitialiser_par_token(
+    data: ResetPasswordByTokenSchema,
+    db: Session = Depends(get_db)
+):
+    """
+    Réinitialise le mot de passe via le token reçu par email.
+    Route publique — pas de token JWT requis.
+
+    Le token est extrait de l'URL du lien cliqué dans l'email.
+    Usage unique — le token est invalidé après utilisation.
+    Expire 30 minutes après sa génération.
+
+    - **token** : token UUID reçu dans l'email (paramètre de l'URL)
+    - **nouveau_mot_de_passe** : nouveau mot de passe — min 8 caractères
+    """
+
+    # ── 1. Valide le nouveau mot de passe ─────────────────────
+    if len(data.nouveau_mot_de_passe) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Le mot de passe doit contenir au moins 8 caractères"
+        )
+
+    # ── 2. Cherche le token en base ───────────────────────────
+    reset_token = db.query(PasswordResetToken).filter(
+        PasswordResetToken.token == data.token
+    ).first()
+
+    # Message volontairement vague — ne révèle pas si le token a expiré ou est invalide
+    erreur_token = HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Lien invalide ou expiré. Faites une nouvelle demande de réinitialisation."
+    )
+
+    if not reset_token:
+        raise erreur_token
+
+    # ── 3. Vérifie que le token est encore valide ─────────────
+    if reset_token.utilise:
+        raise erreur_token
+
+    if datetime.now(timezone.utc) > reset_token.expiration.replace(tzinfo=timezone.utc):
+        reset_token.utilise = True
+        db.commit()
+        raise erreur_token
+
+    # ── 4. Met à jour le mot de passe ────────────────────────
+    utilisateur = db.query(Utilisateur).filter(
+        Utilisateur.id == reset_token.utilisateur_id
+    ).first()
+
+    if not utilisateur or not utilisateur.actif:
+        raise erreur_token
+
+    utilisateur.mot_de_passe = hasher_mot_de_passe(data.nouveau_mot_de_passe)
+
+    # ── 5. Invalide le token (usage unique) ───────────────────
+    reset_token.utilise = True
+
     db.commit()

@@ -152,6 +152,23 @@ class Utilisateur(Base):
     nageur = relationship("Nageur", backref="utilisateur")
 
 
+class PasswordResetToken(Base):
+    """
+    Token de réinitialisation de mot de passe.
+    Généré quand l'utilisateur clique "Mot de passe oublié".
+    Envoyé par email sous forme de lien.
+    Usage unique — invalide après utilisation ou après 30 minutes.
+    """
+    __tablename__ = "password_reset_tokens"
+
+    id             = Column(Integer, primary_key=True, index=True)
+    token          = Column(String, unique=True, nullable=False, index=True)  # UUID v4
+    utilisateur_id = Column(Integer, ForeignKey("utilisateurs.id", ondelete="CASCADE"), nullable=False)
+    expiration     = Column(DateTime, nullable=False)   # horodatage d'expiration (30 min)
+    utilise        = Column(Boolean, nullable=False, default=False)  # True = déjà utilisé
+    cree_le        = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+
+
 class AuditLog(Base):
     """
     Journal d'audit RGPD — trace chaque accès à une donnée de santé.
