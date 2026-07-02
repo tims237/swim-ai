@@ -125,8 +125,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         )
 
         # Supprime le header qui révèle la technologie utilisée
-        reponse.headers.pop("server", None)
-        reponse.headers.pop("x-powered-by", None)
+        if "server" in reponse.headers:
+            del reponse.headers["server"]
+        if "x-powered-by" in reponse.headers:
+            del reponse.headers["x-powered-by"]
 
         return reponse
 

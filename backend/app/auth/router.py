@@ -314,17 +314,31 @@ def supprimer_mon_compte(
     Le token JWT devient immédiatement invalide après suppression.
     """
 
-    # Si l'utilisateur est un nageur, supprimer son profil nageur en premier
-    # (la suppression du profil déclenche le CASCADE sur sessions/biometries/performances)
-    if current_user.nageur_id:
-        nageur = db.query(Nageur).filter(
-            Nageur.id == current_user.nageur_id
-        ).first()
-        if nageur:
-            db.delete(nageur)
+    nageur_id = current_user.nageur_id
+    utilisateur_id = current_user.id
 
-    # Supprime le compte utilisateur
-    db.delete(current_user)
+    # On bypasse l'ORM et on laisse PostgreSQL gérer le CASCADE directement.
+    # L'ORM SQLAlchemy tente de SET NULL avant suppression, ce qui viole
+    # la contrainte NOT NULL de nageur_id dans biometries/sessions/performances.
+    # Le SQL brut déclenche le vrai CASCADE défini dans le DDL.
+    db.execute(
+        __import__("sqlalchemy").text(
+            "DELETE FROM utilisateurs WHERE id = :uid"
+        ),
+        {"uid": utilisateur_id}
+    )
+
+    if nageur_id:
+        # Ceci déclenche le CASCADE PostgreSQL :
+        # nageurs → sessions → performances (CASCADE)
+        # nageurs → biometries (CASCADE)
+        db.execute(
+            __import__("sqlalchemy").text(
+                "DELETE FROM nageurs WHERE id = :nid"
+            ),
+            {"nid": nageur_id}
+        )
+
     db.commit()
 
 
