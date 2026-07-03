@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { getNageurs, getSessions, getPerformancesNageur, creerPerformance } from '../api/api'
+import { useState, FormEvent, useEffect } from 'react'
+import { getNageurs, getSessionsNageur, getPerformancesNageur, creerPerformance } from '../api/api'
 import type { Nageur, Session, Performance, StyleNage } from '../types'
 import theme from '../theme'
 
@@ -32,9 +32,13 @@ function Performances() {
     setForm({ ...form, nageur_id: id, session_id: '' })
     if (id) {
       try {
-        const all = await getSessions()
-        setSessions(all.filter((s) => s.nageur_id === parseInt(id)))
-        setPerformances(await getPerformancesNageur(parseInt(id)))
+        // Parallèle : les deux requêtes sont indépendantes
+        const [sessionsNageur, perfs] = await Promise.all([
+          getSessionsNageur(parseInt(id)),   // route dédiée, filtre côté serveur
+          getPerformancesNageur(parseInt(id)),
+        ])
+        setSessions(sessionsNageur)
+        setPerformances(perfs)
       } catch (_) { /* silencieux */ }
     } else {
       setSessions([])
@@ -42,7 +46,7 @@ function Performances() {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     try {
       const dist = parseInt(form.distance_m)
@@ -56,7 +60,9 @@ function Performances() {
         vitesse_moy: vitesse,
       })
       setMessage('✅ Performance enregistrée !')
-      void getPerformancesNageur(parseInt(form.nageur_id)).then(setPerformances)
+      try {
+        setPerformances(await getPerformancesNageur(parseInt(form.nageur_id)))
+      } catch (_) { /* échec silencieux du rechargement — la table se mettra à jour au prochain render */ }
     } catch (_) {
       setMessage('❌ Erreur lors de l\'enregistrement')
     }

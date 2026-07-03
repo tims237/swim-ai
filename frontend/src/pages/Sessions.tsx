@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
 import { getSessions, creerSession, getNageurs } from '../api/api'
 import type { Session, Nageur, TypeSeance } from '../types'
 import theme from '../theme'
@@ -30,7 +30,7 @@ function Sessions() {
     return n ? `${n.prenom} ${n.nom}` : `Nageur #${id}`
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     try {
       await creerSession({

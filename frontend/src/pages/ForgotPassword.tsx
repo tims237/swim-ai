@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { motDePasseOublie } from '../api/api'
 import theme from '../theme'
 
@@ -7,13 +7,18 @@ function ForgotPassword() {
   const [envoye, setEnvoye] = useState(false)
   const [chargement, setChargement] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setChargement(true)
-    await motDePasseOublie(email)
-    // On affiche toujours le message de succès (sécurité anti-énumération)
-    setEnvoye(true)
-    setChargement(false)
+    try {
+      await motDePasseOublie(email)
+    } catch {
+      // Erreur réseau ou serveur — on affiche quand même le message générique
+      // (sécurité : ne pas révéler si l'email existe ou non)
+    } finally {
+      setChargement(false)
+      setEnvoye(true)
+    }
   }
 
   const inputStyle: React.CSSProperties = {

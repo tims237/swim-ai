@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
 import { resetPasswordParToken } from '../api/api'
 import theme from '../theme'
 
@@ -17,7 +17,7 @@ function ResetPassword() {
     else setErreur('Lien invalide. Veuillez faire une nouvelle demande.')
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setErreur('')
     if (form.nouveau.length < 8) return setErreur('Le mot de passe doit contenir au moins 8 caractères')

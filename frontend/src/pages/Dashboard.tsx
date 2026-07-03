@@ -121,7 +121,17 @@ function Dashboard({ utilisateur }: DashboardProps) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
               <KpiCard titre="Dernier chrono" valeur={dashboard.kpi.dernier_chrono ? `${dashboard.kpi.dernier_chrono}s` : '—'} couleur={theme.primary} />
               <KpiCard titre="Meilleur chrono" valeur={dashboard.kpi.meilleur_chrono ? `${dashboard.kpi.meilleur_chrono}s` : '—'} couleur={theme.succes} />
-              <KpiCard titre="Progression" valeur={dashboard.kpi.progression !== null ? `${dashboard.kpi.progression}%` : '—'} couleur={(dashboard.kpi.progression ?? 0) < 0 ? theme.succes : theme.warning} />
+              <KpiCard
+                titre="Progression"
+                valeur={dashboard.kpi.progression !== null ? `${dashboard.kpi.progression}%` : '—'}
+                couleur={
+                  dashboard.kpi.progression === null
+                    ? theme.texteDoux                          // pas de données → gris neutre
+                    : dashboard.kpi.progression < 0
+                      ? theme.succes                          // négatif = plus rapide = bon
+                      : theme.warning                         // positif = plus lent = attention
+                }
+              />
               <KpiCard titre="HRV moyenne" valeur={dashboard.kpi.hrv_moyenne ? `${dashboard.kpi.hrv_moyenne} ms` : '—'} couleur="#8b5cf6" />
               <KpiCard titre="FC repos" valeur={dashboard.kpi.fc_repos ? `${dashboard.kpi.fc_repos} bpm` : '—'} couleur={theme.danger} />
               <KpiCard titre="RPE moyen" valeur={dashboard.kpi.rpe_moyen ?? '—'} couleur={theme.warning} />

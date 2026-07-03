@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
 import { getNageurs, creerNageur, supprimerNageur } from '../api/api'
 import type { Nageur } from '../types'
 import theme from '../theme'
@@ -14,7 +14,7 @@ function Nageurs() {
     try { setNageurs(await getNageurs()) } catch (_) { /* silencieux */ }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     try {
       await creerNageur({ ...form, specialite: form.specialite || undefined, niveau: form.niveau || undefined })

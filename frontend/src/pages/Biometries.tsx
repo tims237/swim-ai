@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
 import { getNageurs, getBiometriesNageur, creerBiometrie } from '../api/api'
 import type { Nageur, Biometrie } from '../types'
 import theme from '../theme'
@@ -26,7 +26,7 @@ function Biometries() {
     else setBiometries([])
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     try {
       await creerBiometrie({
@@ -38,6 +38,7 @@ function Biometries() {
         sommeil_h: form.sommeil_h ? parseFloat(form.sommeil_h) : null,
       })
       setMessage('✅ Biométrie enregistrée !')
+      setForm({ ...form, date: '', hrv_ms: '', fc_repos: '', rpe: '', sommeil_h: '' })
       void chargerBiometries(parseInt(form.nageur_id))
     } catch (_) {
       setMessage('❌ Erreur lors de l\'enregistrement')

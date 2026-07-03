@@ -17,13 +17,20 @@ import theme from './theme'
 import './App.css'
 
 // ─── Pages publiques (sans authentification) ──────────────────────────────
+// Encapsulées dans leur propre BrowserRouter pour que React Router
+// gère la navigation côté client — window.location.pathname ne suffit pas.
 function PublicRoutes({ onLoginReussi }: { onLoginReussi: () => void }) {
-  const path = window.location.pathname
-  if (path === '/register/nageur')      return <RegisterNageur />
-  if (path === '/register/entraineur')  return <RegisterEntraineur />
-  if (path === '/forgot-password')      return <ForgotPassword />
-  if (path === '/reset-password')       return <ResetPassword />
-  return <Login onLoginReussi={onLoginReussi} />
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/register/nageur"      element={<RegisterNageur />} />
+        <Route path="/register/entraineur"  element={<RegisterEntraineur />} />
+        <Route path="/forgot-password"      element={<ForgotPassword />} />
+        <Route path="/reset-password"       element={<ResetPassword />} />
+        <Route path="*"                     element={<Login onLoginReussi={onLoginReussi} />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
 // ─── Application principale (après login) ────────────────────────────────
@@ -150,8 +157,13 @@ function App() {
   }, [])
 
   const handleLoginReussi = async () => {
-    const u = await getMe()
-    setUtilisateur(u)
+    try {
+      const u = await getMe()
+      setUtilisateur(u)
+    } catch {
+      // Token stocké mais /auth/me échoue — on nettoie et on reste sur le login
+      localStorage.removeItem('token')
+    }
   }
 
   const handleDeconnexion = () => {

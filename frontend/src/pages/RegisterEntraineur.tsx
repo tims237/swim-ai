@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { registerEntraineur } from '../api/api'
 import theme from '../theme'
 
@@ -12,7 +12,7 @@ function RegisterEntraineur() {
   const [succes, setSucces] = useState(false)
   const [chargement, setChargement] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setErreur('')
     if (form.mot_de_passe.length < 8) return setErreur('Le mot de passe doit contenir au moins 8 caractères')

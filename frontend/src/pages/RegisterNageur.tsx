@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, FormEvent } from 'react'
 import { registerNageur } from '../api/api'
 import theme from '../theme'
 
@@ -12,7 +12,7 @@ function RegisterNageur() {
   const [succes, setSucces] = useState(false)
   const [chargement, setChargement] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setErreur('')
 
@@ -35,8 +35,10 @@ function RegisterNageur() {
       })
       setSucces(true)
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { detail?: string } } }
-      setErreur(e.response?.data?.detail ?? 'Erreur lors de l\'inscription')
+      const e = err as { response?: { data?: { detail?: unknown } } }
+      const detail = e.response?.data?.detail
+      // FastAPI renvoie un string pour les 400, un tableau d'objets pour les 422
+      setErreur(typeof detail === 'string' ? detail : 'Erreur lors de l\'inscription')
     } finally {
       setChargement(false)
     }

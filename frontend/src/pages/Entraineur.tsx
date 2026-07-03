@@ -63,10 +63,11 @@ function Entraineur() {
     return theme.succes
   }
 
-  const dashs = Object.values(dashboards).filter(Boolean) as DashboardResponse[]
-  const enForme = dashs.filter((d) => (d.kpi.fatigue ?? 0) < 50).length
-  const vigilance = dashs.filter((d) => { const f = d.kpi.fatigue ?? 0; return f >= 50 && f < 70 }).length
-  const surmenage = dashs.filter((d) => (d.kpi.fatigue ?? 0) >= 70).length
+  // On compte sur TOUS les nageurs, pas seulement ceux dont le dashboard a réussi.
+  // Un nageur sans dashboard est compté comme "inconnu" (ni en forme ni surmenage).
+  const enForme   = nageurs.filter((n) => { const f = dashboards[n.id]?.kpi?.fatigue; return f != null && f < 50 }).length
+  const vigilance = nageurs.filter((n) => { const f = dashboards[n.id]?.kpi?.fatigue; return f != null && f >= 50 && f < 70 }).length
+  const surmenage = nageurs.filter((n) => { const f = dashboards[n.id]?.kpi?.fatigue; return f != null && f >= 70 }).length
 
   const carte: React.CSSProperties = {
     background: theme.fondCarte, borderRadius: '16px',
