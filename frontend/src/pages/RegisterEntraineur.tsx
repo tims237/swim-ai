@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { registerEntraineur } from "../api/api";
 import theme from "../theme";
+import Spinner from "../components/Spinner";
 
 function RegisterEntraineur() {
   const [form, setForm] = useState({
@@ -435,18 +436,7 @@ function RegisterEntraineur() {
               gap: "10px",
             }}
           >
-            {chargement && (
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  border: "2px solid rgba(255,255,255,0.3)",
-                  borderTopColor: "#fff",
-                  borderRadius: "50%",
-                  animation: "spin 0.6s linear infinite",
-                }}
-              />
-            )}
+            {chargement && <Spinner size="small" color="white" />}
             {chargement
               ? "Création en cours..."
               : "Créer mon compte entraîneur"}

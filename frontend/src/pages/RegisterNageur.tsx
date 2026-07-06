@@ -1,6 +1,7 @@
 import { useState, FormEvent } from "react";
 import { registerNageur } from "../api/api";
 import theme from "../theme";
+import Spinner from "../components/Spinner";
 
 function RegisterNageur() {
   const [form, setForm] = useState({
@@ -480,18 +481,7 @@ function RegisterNageur() {
               gap: "10px",
             }}
           >
-            {chargement && (
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  border: "2px solid rgba(255,255,255,0.3)",
-                  borderTopColor: "#fff",
-                  borderRadius: "50%",
-                  animation: "spin 0.6s linear infinite",
-                }}
-              />
-            )}
+            {chargement && <Spinner size="small" color="white" />}
             {chargement ? "Création en cours..." : "Créer mon compte"}
           </button>
 

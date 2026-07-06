@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { login } from "../api/api";
 import theme from "../theme";
+import Spinner from "../components/Spinner";
 
 interface LoginProps {
   onLoginReussi: () => void;
@@ -401,18 +402,7 @@ function Login({ onLoginReussi }: LoginProps) {
               }
             }}
           >
-            {chargement && (
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  border: "2px solid rgba(255,255,255,0.3)",
-                  borderTopColor: "#fff",
-                  borderRadius: "50%",
-                  animation: "spin 0.6s linear infinite",
-                }}
-              />
-            )}
+            {chargement && <Spinner size="small" color="white" />}
             {chargement ? "Connexion en cours..." : "Se connecter"}
           </button>
 

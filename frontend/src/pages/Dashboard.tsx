@@ -6,6 +6,7 @@ import KpiCard from "../components/KpiCard";
 import ChronoChart from "../components/ChronoChart";
 import Recommandations from "../components/Recommandations";
 import { DownloadIcon } from "../components/Icons";
+import Spinner from "../components/Spinner";
 import theme from "../theme";
 
 interface DashboardProps {
@@ -610,16 +611,7 @@ function DashboardEntraineur({ utilisateur }: { utilisateur: Utilisateur }) {
             padding: "20px 0",
           }}
         >
-          <div
-            style={{
-              width: "18px",
-              height: "18px",
-              border: `2px solid ${theme.bordure}`,
-              borderTopColor: theme.primary,
-              borderRadius: "50%",
-              animation: "spin 0.8s linear infinite",
-            }}
-          />
+          <Spinner size="small" color="primary" />
           Chargement de l'équipe…
         </div>
       )}
@@ -947,16 +939,7 @@ function DashboardEntraineur({ utilisateur }: { utilisateur: Utilisateur }) {
                     padding: "20px 0",
                   }}
                 >
-                  <div
-                    style={{
-                      width: "18px",
-                      height: "18px",
-                      border: `2px solid ${theme.bordure}`,
-                      borderTopColor: theme.primary,
-                      borderRadius: "50%",
-                      animation: "spin 0.8s linear infinite",
-                    }}
-                  />
+                  <Spinner size="small" color="primary" />
                   Chargement…
                 </div>
               ) : dashboards[nageurSelectionne] ? (
@@ -1036,16 +1019,7 @@ function DashboardNageur({ utilisateur }: { utilisateur: Utilisateur }) {
             padding: "20px 0",
           }}
         >
-          <div
-            style={{
-              width: "18px",
-              height: "18px",
-              border: `2px solid ${theme.bordure}`,
-              borderTopColor: theme.primary,
-              borderRadius: "50%",
-              animation: "spin 0.8s linear infinite",
-            }}
-          />
+          <Spinner size="small" color="primary" />
           Chargement en cours…
         </div>
       )}
