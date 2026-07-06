@@ -131,7 +131,15 @@ function AppConnectee({
                     padding: "6px 8px",
                   }}
                 >
-                  <WavesIcon size={26} color="#0055FF" strokeWidth={2.5} />
+                  <img
+                    src="/logo.png"
+                    alt="Swim AI"
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      objectFit: "contain",
+                    }}
+                  />
                   <h2
                     style={{
                       color: "#0f172a",
@@ -194,7 +202,15 @@ function AppConnectee({
                 {logoHover ? (
                   <MenuIcon size={22} color="#64748b" strokeWidth={2} />
                 ) : (
-                  <WavesIcon size={26} color="#0055FF" strokeWidth={2.5} />
+                  <img
+                    src="/logo.png"
+                    alt="Swim AI"
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      objectFit: "contain",
+                    }}
+                  />
                 )}
               </div>
             )}
