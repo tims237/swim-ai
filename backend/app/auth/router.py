@@ -14,6 +14,8 @@ from sqlalchemy.orm import Session
 limiter = Limiter(key_func=get_remote_address)
 
 # 3. Imports locaux
+from sqlalchemy import text
+
 from app.auth.security import (
     hasher_mot_de_passe,
     verifier_mot_de_passe,
@@ -34,6 +36,7 @@ from app.schemas import (
     InscriptionEntraineurSchema,
     TokenSchema,
     UtilisateurResponse,
+    ProfilUpdateSchema,
     ChangeRoleSchema,
     ChangePasswordSchema,
     ResetPasswordAdminSchema,
@@ -97,6 +100,8 @@ def inscription(utilisateur: InscriptionSchema, db: Session = Depends(get_db)):
         email        = utilisateur.email,
         mot_de_passe = hash_mot_de_passe,  # hash bcrypt
         role         = "nageur",           # rôle forcé — sécurité
+        nom          = utilisateur.nom,
+        prenom       = utilisateur.prenom,
         nageur_id    = utilisateur.nageur_id,
         actif        = True
     )
@@ -302,6 +307,36 @@ def get_me(current_user: Utilisateur = Depends(get_current_user)):
     return current_user
 
 
+@router.put("/me", response_model=UtilisateurResponse)
+def modifier_mon_profil(
+    data: ProfilUpdateSchema,
+    db: Session = Depends(get_db),
+    current_user: Utilisateur = Depends(get_current_user)
+):
+    """
+    Permet à l'utilisateur connecté de modifier ses informations personnelles.
+    Route protégée — token JWT requis.
+
+    Seuls les champs fournis sont mis à jour (les autres restent inchangés).
+    - **nom** : optionnel
+    - **prenom** : optionnel
+    - **date_naissance** : optionnel
+    - **lieu_naissance** : optionnel
+
+    Pour changer l'email ou le mot de passe, utiliser les routes dédiées.
+    """
+
+    # Ne met à jour que les champs explicitement envoyés
+    donnees = data.model_dump(exclude_unset=True)
+    for champ, valeur in donnees.items():
+        setattr(current_user, champ, valeur)
+
+    db.commit()
+    db.refresh(current_user)
+
+    return current_user
+
+
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 def supprimer_mon_compte(
     db: Session = Depends(get_db),
@@ -330,9 +365,7 @@ def supprimer_mon_compte(
     # la contrainte NOT NULL de nageur_id dans biometries/sessions/performances.
     # Le SQL brut déclenche le vrai CASCADE défini dans le DDL.
     db.execute(
-        __import__("sqlalchemy").text(
-            "DELETE FROM utilisateurs WHERE id = :uid"
-        ),
+        text("DELETE FROM utilisateurs WHERE id = :uid"),
         {"uid": utilisateur_id}
     )
 
@@ -341,9 +374,7 @@ def supprimer_mon_compte(
         # nageurs → sessions → performances (CASCADE)
         # nageurs → biometries (CASCADE)
         db.execute(
-            __import__("sqlalchemy").text(
-                "DELETE FROM nageurs WHERE id = :nid"
-            ),
+            text("DELETE FROM nageurs WHERE id = :nid"),
             {"nid": nageur_id}
         )
 

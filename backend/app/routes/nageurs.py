@@ -93,6 +93,15 @@ def get_nageurs(
     """
     # Plafonne le limit à 100 pour éviter les requêtes trop lourdes
     limit = min(limit, 100)
+
+    # Un nageur ne voit que son propre profil
+    if current_user.role == "nageur":
+        if current_user.nageur_id is None:
+            return []
+        return db.query(Nageur).filter(
+            Nageur.id == current_user.nageur_id
+        ).all()
+
     return db.query(Nageur).offset(skip).limit(limit).all()
 
 
@@ -112,6 +121,13 @@ def get_nageur(
     Route protégée — token JWT requis.
     Retourne une erreur 404 si le nageur n'existe pas.
     """
+    # Un nageur ne peut voir que son propre profil
+    if current_user.role == "nageur" and current_user.nageur_id != nageur_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Accès refusé — vous ne pouvez voir que votre propre profil"
+        )
+
     nageur = db.query(Nageur).filter(Nageur.id == nageur_id).first()
 
     if not nageur:
