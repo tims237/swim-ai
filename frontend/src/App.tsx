@@ -273,76 +273,135 @@ function AppConnectee({
 
           {/* Profil + déconnexion */}
           <div style={{ marginTop: "auto", paddingTop: "16px" }}>
-            {sidebarOuverte && (
+            {sidebarOuverte ? (
               <div
                 style={{
-                  padding: "14px",
-                  borderRadius: "12px",
-                  background: "#f8fafc",
-                  marginBottom: "10px",
-                  fontSize: "13px",
-                  color: "#334155",
                   border: "1px solid #e2e8f0",
+                  borderRadius: "14px",
+                  overflow: "hidden",
+                  background: "#f8fafc",
                 }}
               >
+                {/* Infos profil */}
                 <div
                   style={{
+                    padding: "14px 14px 12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #0055FF, #06B6D4)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#fff",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      flexShrink: 0,
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    {utilisateur.prenom?.[0]?.toUpperCase()}
+                    {utilisateur.nom?.[0]?.toUpperCase()}
+                  </div>
+                  <div style={{ overflow: "hidden", flex: 1 }}>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: "13px",
+                        color: "#334155",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {utilisateur.prenom} {utilisateur.nom}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: "11px",
+                        color: "#94a3b8",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        marginTop: "2px",
+                      }}
+                    >
+                      {utilisateur.email}
+                    </div>
+                  </div>
+                </div>
+                {/* Séparateur */}
+                <div style={{ height: "1px", background: "#e2e8f0" }} />
+                {/* Bouton déco */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeconnexion();
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    background: "transparent",
+                    color: "#dc2626",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "13px",
                     fontWeight: 600,
-                    marginBottom: "4px",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "background 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#fef2f2";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
                   }}
                 >
-                  {utilisateur.prenom} {utilisateur.nom}
-                </div>
-                <div
-                  style={{
-                    fontSize: "11px",
-                    color: "#64748b",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {utilisateur.email}
-                </div>
+                  <LogOutIcon size={15} />
+                  Déconnexion
+                </button>
               </div>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeconnexion();
+                }}
+                title="Déconnexion"
+                style={{
+                  width: "100%",
+                  padding: "12px",
+                  background: "#fef2f2",
+                  color: "#dc2626",
+                  border: "1px solid #fecaca",
+                  borderRadius: "10px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "#fee2e2";
+                  e.currentTarget.style.borderColor = "#fca5a5";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "#fef2f2";
+                  e.currentTarget.style.borderColor = "#fecaca";
+                }}
+              >
+                <LogOutIcon size={16} />
+              </button>
             )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeconnexion();
-              }}
-              title={!sidebarOuverte ? "Déconnexion" : undefined}
-              style={{
-                width: "100%",
-                padding: sidebarOuverte ? "11px 12px" : "12px",
-                background: "#fef2f2",
-                color: "#dc2626",
-                border: "1px solid #fecaca",
-                borderRadius: "10px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: sidebarOuverte ? "center" : "center",
-                gap: sidebarOuverte ? "8px" : "0",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#fee2e2";
-                e.currentTarget.style.borderColor = "#fca5a5";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "#fef2f2";
-                e.currentTarget.style.borderColor = "#fecaca";
-              }}
-            >
-              <LogOutIcon size={16} />
-              {sidebarOuverte && "Déconnexion"}
-            </button>
           </div>
         </nav>
 
