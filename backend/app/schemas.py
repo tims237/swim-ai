@@ -182,9 +182,12 @@ class PerformanceUpdate(BaseModel):
 class InscriptionSchema(BaseModel):
     """Ancien schéma d'inscription générique — conservé pour compatibilité.
     Préférer InscriptionNageurSchema ou InscriptionEntraineurSchema.
+    nom et prenom obligatoires : colonne NOT NULL dans la table utilisateurs.
     """
     email        : str
     mot_de_passe : str
+    nom          : str
+    prenom       : str
     nageur_id    : Optional[int] = None
 
 
@@ -242,6 +245,17 @@ class UtilisateurResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ProfilUpdateSchema(BaseModel):
+    """Mise à jour du profil par l'utilisateur connecté.
+    Route : PUT /auth/me
+    Tous les champs sont optionnels — seuls les champs envoyés sont modifiés.
+    """
+    nom            : Optional[str]      = None
+    prenom         : Optional[str]      = None
+    date_naissance : Optional[DateType] = None
+    lieu_naissance : Optional[str]      = None
 
 
 class ChangeRoleSchema(BaseModel):

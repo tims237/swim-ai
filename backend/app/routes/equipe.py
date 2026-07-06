@@ -109,13 +109,18 @@ def generer_alertes_equipe(nageurs_data: List[NageurEquipe]) -> List[AlerteEquip
     for nageur in nageurs_data:
 
         if nageur.statut == "surmenage":
+            # Le surmenage peut être déclenché par l'ACWR ou par la fatigue
+            if nageur.acwr and nageur.acwr > 1.5:
+                msg_surmenage = f"ACWR critique ({nageur.acwr}) — réduire immédiatement le volume"
+            else:
+                msg_surmenage = f"Fatigue critique ({nageur.fatigue}/100) — repos obligatoire"
             alertes.append(AlerteEquipe(
                 nageur_id = nageur.id,
                 nom       = nageur.nom,
                 prenom    = nageur.prenom,
                 type      = "surmenage",
                 niveau    = "danger",
-                message   = f"ACWR {nageur.acwr} — réduire immédiatement le volume"
+                message   = msg_surmenage
             ))
 
         elif nageur.statut == "fatigue":

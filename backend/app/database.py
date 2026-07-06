@@ -22,6 +22,15 @@ load_dotenv(dotenv_path=env_path)
 # Récupération de l'URL de connexion — jamais en dur dans le code
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+if not DATABASE_URL:
+    import sys
+    print(
+        "[ERREUR CRITIQUE] DATABASE_URL non définie dans le fichier .env.\n"
+        "Exemple : DATABASE_URL=postgresql://user:password@localhost:5432/swim_ai_db",
+        file=sys.stderr
+    )
+    sys.exit(1)
+
 # Moteur SQLAlchemy — gère le pool de connexions vers PostgreSQL
 # pool_pre_ping=True : vérifie que la connexion est vivante avant chaque requête
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)

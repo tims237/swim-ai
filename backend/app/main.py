@@ -53,7 +53,7 @@ app.add_middleware(
 # Ne supprime jamais les tables existantes — sécurisé en production
 Base.metadata.create_all(bind=engine)
 
-app.include_router(auth_router.router) 
+app.include_router(auth_router.router)    # route d'authentification (inscription, connexion)
 
 # Enregistrement de tous les routers
 app.include_router(nageurs.router)
@@ -62,8 +62,7 @@ app.include_router(biometries.router)
 app.include_router(performances.router)
 app.include_router(dashboard.router)
 app.include_router(equipe.router)
-app.include_router(legal.router)   # mentions légales et politique de confidentialité (public)
-  # route d'authentification (inscription, connexion)
+app.include_router(legal.router)          # mentions légales et politique de confidentialité (public)
 
 @app.get("/")
 def root():
