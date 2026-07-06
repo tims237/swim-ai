@@ -242,3 +242,26 @@ export function MenuIcon({
     </svg>
   );
 }
+
+export function DownloadIcon({
+  size = 20,
+  color = "currentColor",
+  strokeWidth = 2,
+}: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3v12" />
+      <path d="M8 11l4 4 4-4" />
+      <path d="M3 19h18" />
+    </svg>
+  );
+}

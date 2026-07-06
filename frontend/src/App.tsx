@@ -7,7 +7,6 @@ import Nageurs from "./pages/Nageurs";
 import Sessions from "./pages/Sessions";
 import Biometries from "./pages/Biometries";
 import Performances from "./pages/Performances";
-import Entraineur from "./pages/Entraineur";
 import Login from "./pages/Login";
 import RegisterNageur from "./pages/RegisterNageur";
 import RegisterEntraineur from "./pages/RegisterEntraineur";
@@ -65,7 +64,6 @@ function AppConnectee({
   ];
 
   const menuEntraineur = [
-    { to: "/entraineur", label: "Vue équipe", icon: UsersIcon },
     { to: "/", label: "Dashboard", icon: DashboardIcon },
     { to: "/nageurs", label: "Nageurs", icon: UserIcon },
     { to: "/sessions", label: "Sessions", icon: SessionIcon },
@@ -423,9 +421,6 @@ function AppConnectee({
             <Route path="/sessions" element={<Sessions />} />
             <Route path="/biometries" element={<Biometries />} />
             <Route path="/performances" element={<Performances />} />
-            {estEntraineur && (
-              <Route path="/entraineur" element={<Entraineur />} />
-            )}
             <Route
               path="*"
               element={
