@@ -11,7 +11,7 @@ function Login({ onLoginReussi }: LoginProps) {
   const [motDePasse, setMotDePasse] = useState("");
   const [erreur, setErreur] = useState("");
   const [chargement, setChargement] = useState(false);
-  const [vue, setVue] = useState<"login" | "choix-inscription">("login");
+
   const [afficherMotDePasse, setAfficherMotDePasse] = useState(false);
 
   const handleConnexion = async () => {
@@ -52,175 +52,6 @@ function Login({ onLoginReussi }: LoginProps) {
     fontSize: "13px",
     fontWeight: 600,
   };
-
-  if (vue === "choix-inscription") {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: theme.tertiary,
-          fontFamily: theme.policeTexte,
-        }}
-      >
-        <div
-          style={{
-            background: theme.blanc,
-            padding: "40px",
-            borderRadius: "20px",
-            width: "440px",
-            maxWidth: "90%",
-            border: `1px solid ${theme.bordure}`,
-            boxShadow: "0 20px 60px rgba(15,23,42,0.12)",
-            animation: "fadeIn 0.4s ease-out",
-          }}
-        >
-          <div style={{ textAlign: "center", marginBottom: "32px" }}>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "64px",
-                height: "64px",
-                borderRadius: "18px",
-                background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`,
-                marginBottom: "16px",
-                boxShadow: "0 10px 30px rgba(0,85,255,0.25)",
-                padding: "8px",
-              }}
-            >
-              <img
-                src="/logo.png"
-                alt="Swim AI"
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              />
-            </div>
-            <h1
-              style={{
-                fontFamily: theme.policeTitre,
-                fontSize: "24px",
-                fontWeight: 800,
-                color: theme.neutral,
-                margin: 0,
-              }}
-            >
-              Créer un compte
-            </h1>
-            <p
-              style={{
-                color: theme.texteDoux,
-                fontSize: "14px",
-                marginTop: "8px",
-              }}
-            >
-              Choisissez votre profil pour commencer
-            </p>
-          </div>
-
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "14px" }}
-          >
-            <a
-              href="/register/nageur"
-              style={{
-                display: "block",
-                padding: "20px",
-                borderRadius: "14px",
-                border: `2px solid ${theme.primary}`,
-                textDecoration: "none",
-                background: `${theme.primary}08`,
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = `0 8px 20px ${theme.primary}20`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: 700,
-                  color: theme.primary,
-                  fontSize: "16px",
-                  marginBottom: "4px",
-                }}
-              >
-                Je suis nageur
-              </div>
-              <div style={{ fontSize: "13px", color: theme.texteDoux }}>
-                Suivez vos performances, chronos et récupération
-              </div>
-            </a>
-            <a
-              href="/register/entraineur"
-              style={{
-                display: "block",
-                padding: "20px",
-                borderRadius: "14px",
-                border: `2px solid ${theme.secondary}`,
-                textDecoration: "none",
-                background: `${theme.secondary}08`,
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = `0 8px 20px ${theme.secondary}20`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: 700,
-                  color: theme.secondary,
-                  fontSize: "16px",
-                  marginBottom: "4px",
-                }}
-              >
-                Je suis entraîneur
-              </div>
-              <div style={{ fontSize: "13px", color: theme.texteDoux }}>
-                Gérez votre équipe, analysez les données, exportez
-              </div>
-            </a>
-          </div>
-
-          <button
-            onClick={() => setVue("login")}
-            style={{
-              marginTop: "24px",
-              width: "100%",
-              padding: "12px",
-              background: "transparent",
-              border: `1px solid ${theme.bordure}`,
-              color: theme.texteDoux,
-              fontSize: "14px",
-              cursor: "pointer",
-              borderRadius: "10px",
-              fontWeight: 500,
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = theme.tertiary;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-            }}
-          >
-            ← Retour à la connexion
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div
@@ -594,21 +425,16 @@ function Login({ onLoginReussi }: LoginProps) {
             }}
           >
             Pas encore de compte ?{" "}
-            <button
-              onClick={() => setVue("choix-inscription")}
+            <a
+              href="/register"
               style={{
-                background: "none",
-                border: "none",
                 color: theme.primary,
-                cursor: "pointer",
-                fontSize: "14px",
                 fontWeight: 600,
-                padding: 0,
-                textDecoration: "underline",
+                textDecoration: "none",
               }}
             >
               Créer un compte
-            </button>
+            </a>
           </div>
         </div>
       </div>

@@ -10,6 +10,7 @@ import Performances from "./pages/Performances";
 import Login from "./pages/Login";
 import RegisterNageur from "./pages/RegisterNageur";
 import RegisterEntraineur from "./pages/RegisterEntraineur";
+import ChoixInscription from "./pages/ChoixInscription";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import {
@@ -34,6 +35,7 @@ function PublicRoutes({ onLoginReussi }: { onLoginReussi: () => void }) {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/register" element={<ChoixInscription />} />
         <Route path="/register/nageur" element={<RegisterNageur />} />
         <Route path="/register/entraineur" element={<RegisterEntraineur />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
