@@ -120,9 +120,9 @@ function AppConnectee({ utilisateur, onDeconnexion }: { utilisateur: Utilisateur
           <Routes>
             <Route path="/" element={<Dashboard utilisateur={utilisateur} />} />
             {estEntraineur && <Route path="/nageurs" element={<Nageurs />} />}
-            <Route path="/sessions" element={<Sessions />} />
-            <Route path="/biometries" element={<Biometries />} />
-            <Route path="/performances" element={<Performances />} />
+            <Route path="/sessions" element={<Sessions utilisateur={utilisateur} />} />
+            <Route path="/biometries" element={<Biometries utilisateur={utilisateur} />} />
+            <Route path="/performances" element={<Performances utilisateur={utilisateur} />} />
             {estEntraineur && <Route path="/entraineur" element={<Entraineur />} />}
             <Route path="*" element={
               <div style={{ textAlign: 'center', padding: '80px', color: theme.texteDoux }}>
