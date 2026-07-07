@@ -7,6 +7,7 @@ import Nageurs from "./pages/Nageurs";
 import Sessions from "./pages/Sessions";
 import Biometries from "./pages/Biometries";
 import Performances from "./pages/Performances";
+import Profil from "./pages/Profil";
 import Login from "./pages/Login";
 import RegisterNageur from "./pages/RegisterNageur";
 import RegisterEntraineur from "./pages/RegisterEntraineur";
@@ -28,9 +29,6 @@ import {
 import theme from "./theme";
 import "./App.css";
 
-// ─── Pages publiques (sans authentification) ──────────────────────────────
-// Encapsulées dans leur propre BrowserRouter pour que React Router
-// gère la navigation côté client — window.location.pathname ne suffit pas.
 function PublicRoutes({ onLoginReussi }: { onLoginReussi: () => void }) {
   return (
     <BrowserRouter>
@@ -46,7 +44,6 @@ function PublicRoutes({ onLoginReussi }: { onLoginReussi: () => void }) {
   );
 }
 
-// ─── Application principale (après login) ────────────────────────────────
 function AppConnectee({
   utilisateur,
   onDeconnexion,
@@ -136,11 +133,7 @@ function AppConnectee({
                   <img
                     src="/logo.png"
                     alt="Swim AI"
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      objectFit: "contain",
-                    }}
+                    style={{ width: "32px", height: "32px", objectFit: "contain" }}
                   />
                   <h2
                     style={{
@@ -160,26 +153,13 @@ function AppConnectee({
                   onClick={() => setSidebarOuverte(false)}
                   title="Réduire le menu"
                   style={{
-                    background: "transparent",
-                    border: "none",
-                    borderRadius: "8px",
-                    padding: "8px",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#94a3b8",
-                    transition: "background 0.2s ease, color 0.2s ease",
-                    flexShrink: 0,
+                    background: "transparent", border: "none", borderRadius: "8px",
+                    padding: "8px", cursor: "pointer", display: "flex",
+                    alignItems: "center", justifyContent: "center",
+                    color: "#94a3b8", transition: "background 0.2s ease, color 0.2s ease", flexShrink: 0,
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#f1f5f9";
-                    e.currentTarget.style.color = "#475569";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.color = "#94a3b8";
-                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#475569"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#94a3b8"; }}
                 >
                   <MenuIcon size={20} strokeWidth={2} color="currentColor" />
                 </button>
@@ -191,12 +171,8 @@ function AppConnectee({
                 onClick={() => setSidebarOuverte(true)}
                 title="Ouvrir le menu"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  padding: "8px",
-                  borderRadius: "8px",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", padding: "8px", borderRadius: "8px",
                   transition: "background 0.2s ease",
                   background: logoHover ? "#f1f5f9" : "transparent",
                 }}
@@ -204,15 +180,7 @@ function AppConnectee({
                 {logoHover ? (
                   <MenuIcon size={22} color="#64748b" strokeWidth={2} />
                 ) : (
-                  <img
-                    src="/logo.png"
-                    alt="Swim AI"
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      objectFit: "contain",
-                    }}
-                  />
+                  <img src="/logo.png" alt="Swim AI" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
                 )}
               </div>
             )}
@@ -222,17 +190,12 @@ function AppConnectee({
           {sidebarOuverte && (
             <span
               style={{
-                display: "inline-block",
-                marginBottom: "16px",
-                fontSize: "10px",
-                fontWeight: 600,
-                textTransform: "uppercase",
+                display: "inline-block", marginBottom: "16px",
+                fontSize: "10px", fontWeight: 600, textTransform: "uppercase",
                 letterSpacing: "0.08em",
                 color: estNageur ? "#059669" : "#d97706",
                 background: estNageur ? "#d1fae5" : "#fef3c7",
-                padding: "4px 10px",
-                borderRadius: "5px",
-                alignSelf: "flex-start",
+                padding: "4px 10px", borderRadius: "5px", alignSelf: "flex-start",
                 border: `1px solid ${estNageur ? "#a7f3d0" : "#fde68a"}`,
                 whiteSpace: "nowrap",
               }}
@@ -243,22 +206,14 @@ function AppConnectee({
 
           {/* Séparateur collapsed */}
           {!sidebarOuverte && (
-            <div
-              style={{
-                height: "1px",
-                background: "#f1f5f9",
-                margin: "8px 0 12px",
-              }}
-            />
+            <div style={{ height: "1px", background: "#f1f5f9", margin: "8px 0 12px" }} />
           )}
 
           {/* Navigation */}
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             {menu.map(({ to, label, icon: Icon }) => (
               <NavLink
-                key={to + label}
-                to={to}
-                end={to === "/"}
+                key={to + label} to={to} end={to === "/"}
                 title={!sidebarOuverte ? label : undefined}
                 onClick={(e) => e.stopPropagation()}
                 style={({ isActive }) => ({
@@ -269,16 +224,12 @@ function AppConnectee({
                   background: isActive ? "#eff6ff" : "transparent",
                   fontWeight: isActive ? 600 : 500,
                   fontSize: "14px",
-                  display: "flex",
-                  alignItems: "center",
+                  display: "flex", alignItems: "center",
                   justifyContent: sidebarOuverte ? "flex-start" : "center",
                   gap: sidebarOuverte ? "12px" : "0",
                   transition: "all 0.2s ease",
-                  border: isActive
-                    ? "1px solid #dbeafe"
-                    : "1px solid transparent",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
+                  border: isActive ? "1px solid #dbeafe" : "1px solid transparent",
+                  whiteSpace: "nowrap", overflow: "hidden",
                 })}
               >
                 <Icon size={18} strokeWidth={2.5} />
@@ -290,97 +241,61 @@ function AppConnectee({
           {/* Profil + déconnexion */}
           <div style={{ marginTop: "auto", paddingTop: "16px" }}>
             {sidebarOuverte ? (
-              <div
-                style={{
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "14px",
-                  overflow: "hidden",
-                  background: "#f8fafc",
-                }}
-              >
-                {/* Infos profil */}
-                <div
-                  style={{
-                    padding: "14px 14px 12px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                  }}
+              <div style={{ border: "1px solid #e2e8f0", borderRadius: "14px", overflow: "hidden", background: "#f8fafc" }}>
+
+                {/* Infos profil — cliquable → page profil */}
+                <NavLink
+                  to="/profil"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ textDecoration: "none" }}
                 >
                   <div
                     style={{
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #0055FF, #06B6D4)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#fff",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      flexShrink: 0,
-                      letterSpacing: "0.02em",
+                      padding: "14px 14px 12px",
+                      display: "flex", alignItems: "center", gap: "10px",
+                      cursor: "pointer", transition: "background 0.15s",
                     }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "#EFF6FF"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
                   >
-                    {utilisateur.prenom?.[0]?.toUpperCase()}
-                    {utilisateur.nom?.[0]?.toUpperCase()}
-                  </div>
-                  <div style={{ overflow: "hidden", flex: 1 }}>
                     <div
                       style={{
-                        fontWeight: 600,
-                        fontSize: "13px",
-                        color: "#334155",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
+                        width: "36px", height: "36px", borderRadius: "50%",
+                        background: "linear-gradient(135deg, #0055FF, #06B6D4)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "#fff", fontSize: "13px", fontWeight: 700,
+                        flexShrink: 0, letterSpacing: "0.02em",
                       }}
                     >
-                      {utilisateur.prenom} {utilisateur.nom}
+                      {utilisateur.prenom?.[0]?.toUpperCase()}
+                      {utilisateur.nom?.[0]?.toUpperCase()}
                     </div>
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        color: "#94a3b8",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        marginTop: "2px",
-                      }}
-                    >
-                      {utilisateur.email}
+                    <div style={{ overflow: "hidden", flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: "13px", color: "#334155", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {utilisateur.prenom} {utilisateur.nom}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#94a3b8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "2px" }}>
+                        {utilisateur.email}
+                      </div>
                     </div>
                   </div>
-                </div>
+                </NavLink>
+
                 {/* Séparateur */}
                 <div style={{ height: "1px", background: "#e2e8f0" }} />
-                {/* Bouton déco */}
+
+                {/* Bouton déconnexion */}
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeconnexion();
-                  }}
+                  onClick={(e) => { e.stopPropagation(); onDeconnexion(); }}
                   style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    background: "transparent",
-                    color: "#dc2626",
-                    border: "none",
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
+                    width: "100%", padding: "10px 14px", background: "transparent",
+                    color: "#dc2626", border: "none", cursor: "pointer",
+                    fontSize: "13px", fontWeight: 600,
+                    display: "flex", alignItems: "center", gap: "8px",
                     transition: "background 0.2s ease",
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#fef2f2";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "transparent";
-                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "#fef2f2"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
                 >
                   <LogOutIcon size={15} />
                   Déconnexion
@@ -388,32 +303,17 @@ function AppConnectee({
               </div>
             ) : (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeconnexion();
-                }}
+                onClick={(e) => { e.stopPropagation(); onDeconnexion(); }}
                 title="Déconnexion"
                 style={{
-                  width: "100%",
-                  padding: "12px",
-                  background: "#fef2f2",
-                  color: "#dc2626",
-                  border: "1px solid #fecaca",
-                  borderRadius: "10px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  width: "100%", padding: "12px", background: "#fef2f2",
+                  color: "#dc2626", border: "1px solid #fecaca",
+                  borderRadius: "10px", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.2s ease",
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#fee2e2";
-                  e.currentTarget.style.borderColor = "#fca5a5";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#fef2f2";
-                  e.currentTarget.style.borderColor = "#fecaca";
-                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#fee2e2"; e.currentTarget.style.borderColor = "#fca5a5"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#fef2f2"; e.currentTarget.style.borderColor = "#fecaca"; }}
               >
                 <LogOutIcon size={16} />
               </button>
@@ -425,37 +325,26 @@ function AppConnectee({
         <main
           style={{
             marginLeft: sidebarOuverte ? "260px" : "68px",
-            flex: 1,
-            padding: "32px",
+            flex: 1, padding: "32px",
             background: theme.tertiary,
-            height: "100vh",
-            overflowY: "auto",
+            height: "100vh", overflowY: "auto",
             transition: "margin-left 0.3s ease",
           }}
         >
           <Routes>
             <Route path="/" element={<Dashboard utilisateur={utilisateur} />} />
             {estEntraineur && <Route path="/nageurs" element={<Nageurs />} />}
-            <Route path="/sessions" element={<Sessions />} />
-            <Route path="/biometries" element={<Biometries />} />
-            <Route path="/performances" element={<Performances />} />
+            <Route path="/sessions" element={<Sessions utilisateur={utilisateur} />} />
+            <Route path="/biometries" element={<Biometries utilisateur={utilisateur} />} />
+            <Route path="/performances" element={<Performances utilisateur={utilisateur} />} />
+            <Route path="/profil" element={<Profil utilisateur={utilisateur} />} />
             <Route
               path="*"
               element={
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: "80px",
-                    color: theme.texteDoux,
-                  }}
-                >
+                <div style={{ textAlign: "center", padding: "80px", color: theme.texteDoux }}>
                   <p style={{ fontSize: "48px" }}>🏊</p>
-                  <h2 style={{ marginTop: "16px", color: theme.neutral }}>
-                    Page introuvable
-                  </h2>
-                  <a href="/" style={{ color: theme.primary }}>
-                    Retour au dashboard
-                  </a>
+                  <h2 style={{ marginTop: "16px", color: theme.neutral }}>Page introuvable</h2>
+                  <a href="/" style={{ color: theme.primary }}>Retour au dashboard</a>
                 </div>
               }
             />
@@ -466,20 +355,16 @@ function AppConnectee({
   );
 }
 
-// ─── App racine ───────────────────────────────────────────────────────────
 function App() {
   const [utilisateur, setUtilisateur] = useState<Utilisateur | null>(null);
   const [chargement, setChargement] = useState(true);
 
-  // Au démarrage : si token présent → vérifier qu'il est encore valide
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       getMe()
         .then((u) => setUtilisateur(u))
-        .catch(() => {
-          localStorage.removeItem("token");
-        })
+        .catch(() => { localStorage.removeItem("token"); })
         .finally(() => setChargement(false));
     } else {
       setChargement(false);
@@ -487,13 +372,8 @@ function App() {
   }, []);
 
   const handleLoginReussi = async () => {
-    try {
-      const u = await getMe();
-      setUtilisateur(u);
-    } catch {
-      // Token stocké mais /auth/me échoue — on nettoie et on reste sur le login
-      localStorage.removeItem("token");
-    }
+    try { const u = await getMe(); setUtilisateur(u); }
+    catch { localStorage.removeItem("token"); }
   };
 
   const handleDeconnexion = () => {
@@ -503,32 +383,14 @@ function App() {
 
   if (chargement) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: theme.tertiary,
-          color: theme.texteDoux,
-          fontFamily: theme.policeTexte,
-          fontSize: "16px",
-        }}
-      >
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: theme.tertiary, color: theme.texteDoux, fontFamily: theme.policeTexte, fontSize: "16px" }}>
         Chargement...
       </div>
     );
   }
 
-  // Pas connecté → pages publiques (login, register, forgot...)
-  if (!utilisateur) {
-    return <PublicRoutes onLoginReussi={handleLoginReussi} />;
-  }
-
-  // Connecté → application complète
-  return (
-    <AppConnectee utilisateur={utilisateur} onDeconnexion={handleDeconnexion} />
-  );
+  if (!utilisateur) return <PublicRoutes onLoginReussi={handleLoginReussi} />;
+  return <AppConnectee utilisateur={utilisateur} onDeconnexion={handleDeconnexion} />;
 }
 
 export default App;
