@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { getNageurs, getDashboard } from "../api/api";
 import type { Nageur, DashboardResponse } from "../types";
 import type { Utilisateur } from "../types";
-import KpiCard from "../components/KpiCard";
 import ChronoChart from "../components/ChronoChart";
 import Recommandations from "../components/Recommandations";
 import { DownloadIcon } from "../components/Icons";

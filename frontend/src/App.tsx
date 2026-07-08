@@ -19,10 +19,8 @@ import {
   SessionIcon,
   HeartIcon,
   TimerIcon,
-  UsersIcon,
   UserIcon,
   LogOutIcon,
-  WavesIcon,
   ChartIcon,
   MenuIcon,
 } from "./components/Icons";
