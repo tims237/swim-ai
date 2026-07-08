@@ -24,6 +24,7 @@ import {
   ChartIcon,
   MenuIcon,
 } from "./components/Icons";
+import { useWindowWidth } from "./hooks/useWindowWidth";
 import theme from "./theme";
 import "./App.css";
 
@@ -72,6 +73,17 @@ function AppConnectee({
   const [sidebarOuverte, setSidebarOuverte] = useState(true);
   const [logoHover, setLogoHover] = useState(false);
 
+  const width = useWindowWidth();
+  const isMobile = width < 768;
+
+  // Ferme la sidebar automatiquement sur mobile
+  useEffect(() => {
+    if (isMobile) setSidebarOuverte(false);
+    else setSidebarOuverte(true);
+  }, [isMobile]);
+
+  const fermerSidebar = () => setSidebarOuverte(false);
+
   return (
     <BrowserRouter>
       <div
@@ -82,29 +94,46 @@ function AppConnectee({
           overflow: "hidden",
         }}
       >
+        {/* Backdrop mobile — clic en dehors ferme la sidebar */}
+        {isMobile && sidebarOuverte && (
+          <div
+            onClick={fermerSidebar}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15, 23, 42, 0.45)",
+              zIndex: 199,
+            }}
+          />
+        )}
+
         {/* Sidebar */}
         <nav
-          onClick={() => {
-            if (!sidebarOuverte) setSidebarOuverte(true);
-          }}
           style={{
-            width: sidebarOuverte ? "260px" : "68px",
+            width: "260px",
             background: "#ffffff",
-            padding: sidebarOuverte ? "20px 16px" : "20px 10px",
+            padding: isMobile ? "20px 16px" : sidebarOuverte ? "20px 16px" : "20px 10px",
             display: "flex",
             flexDirection: "column",
             gap: "4px",
             flexShrink: 0,
             borderRight: "1px solid #e5e7eb",
-            boxShadow: "2px 0 16px rgba(0, 0, 0, 0.04)",
+            boxShadow: isMobile
+              ? "4px 0 24px rgba(0,0,0,0.12)"
+              : "2px 0 16px rgba(0,0,0,0.04)",
             position: "fixed",
             left: 0,
             top: 0,
             height: "100vh",
             overflowY: "auto",
             overflowX: "hidden",
-            transition: "width 0.3s ease, padding 0.3s ease",
-            cursor: !sidebarOuverte ? "pointer" : "default",
+            zIndex: 200,
+            transition: isMobile
+              ? "transform 0.3s ease"
+              : "width 0.3s ease, padding 0.3s ease",
+            transform: isMobile
+              ? sidebarOuverte ? "translateX(0)" : "translateX(-260px)"
+              : "translateX(0)",
           }}
         >
           {/* Logo + Hamburger */}
@@ -112,194 +141,233 @@ function AppConnectee({
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: sidebarOuverte ? "space-between" : "center",
+              justifyContent: "space-between",
               marginBottom: "8px",
               padding: "4px 0",
               minHeight: "40px",
             }}
           >
-            {sidebarOuverte ? (
-              <>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    padding: "6px 8px",
-                  }}
-                >
-                  <img
-                    src="/logo.png"
-                    alt="Swim AI"
-                    style={{ width: "32px", height: "32px", objectFit: "contain" }}
-                  />
-                  <h2
-                    style={{
-                      color: "#0f172a",
-                      margin: 0,
-                      fontSize: "20px",
-                      fontFamily: theme.policeTitre,
-                      fontWeight: 700,
-                      letterSpacing: "-0.02em",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    Swim AI
-                  </h2>
-                </div>
-                <button
-                  onClick={() => setSidebarOuverte(false)}
-                  title="Réduire le menu"
-                  style={{
-                    background: "transparent", border: "none", borderRadius: "8px",
-                    padding: "8px", cursor: "pointer", display: "flex",
-                    alignItems: "center", justifyContent: "center",
-                    color: "#94a3b8", transition: "background 0.2s ease, color 0.2s ease", flexShrink: 0,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#475569"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#94a3b8"; }}
-                >
-                  <MenuIcon size={20} strokeWidth={2} color="currentColor" />
-                </button>
-              </>
-            ) : (
-              <div
-                onMouseEnter={() => setLogoHover(true)}
-                onMouseLeave={() => setLogoHover(false)}
-                onClick={() => setSidebarOuverte(true)}
-                title="Ouvrir le menu"
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "6px 8px",
+              }}
+            >
+              <img
+                src="/logo.png"
+                alt="Swim AI"
+                style={{ width: "32px", height: "32px", objectFit: "contain" }}
+              />
+              <h2
                 style={{
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", padding: "8px", borderRadius: "8px",
-                  transition: "background 0.2s ease",
-                  background: logoHover ? "#f1f5f9" : "transparent",
+                  color: "#0f172a",
+                  margin: 0,
+                  fontSize: "20px",
+                  fontFamily: theme.policeTitre,
+                  fontWeight: 700,
+                  letterSpacing: "-0.02em",
+                  whiteSpace: "nowrap",
                 }}
               >
-                {logoHover ? (
-                  <MenuIcon size={22} color="#64748b" strokeWidth={2} />
-                ) : (
-                  <img src="/logo.png" alt="Swim AI" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
-                )}
-              </div>
-            )}
+                Swim AI
+              </h2>
+            </div>
+            {/* Bouton fermer (desktop : réduit ; mobile : ferme overlay) */}
+            <button
+              onClick={() => isMobile ? fermerSidebar() : setSidebarOuverte(false)}
+              title={isMobile ? "Fermer le menu" : "Réduire le menu"}
+              style={{
+                background: "transparent", border: "none", borderRadius: "8px",
+                padding: "8px", cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center",
+                color: "#94a3b8", transition: "background 0.2s ease, color 0.2s ease", flexShrink: 0,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#475569"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#94a3b8"; }}
+            >
+              <MenuIcon size={20} strokeWidth={2} color="currentColor" />
+            </button>
           </div>
 
           {/* Badge rôle */}
-          {sidebarOuverte && (
-            <span
-              style={{
-                display: "inline-block", marginBottom: "16px",
-                fontSize: "10px", fontWeight: 600, textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                color: estNageur ? "#059669" : "#d97706",
-                background: estNageur ? "#d1fae5" : "#fef3c7",
-                padding: "4px 10px", borderRadius: "5px", alignSelf: "flex-start",
-                border: `1px solid ${estNageur ? "#a7f3d0" : "#fde68a"}`,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {utilisateur.role}
-            </span>
-          )}
-
-          {/* Séparateur collapsed */}
-          {!sidebarOuverte && (
-            <div style={{ height: "1px", background: "#f1f5f9", margin: "8px 0 12px" }} />
-          )}
+          <span
+            style={{
+              display: "inline-block", marginBottom: "16px",
+              fontSize: "10px", fontWeight: 600, textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: estNageur ? "#059669" : "#d97706",
+              background: estNageur ? "#d1fae5" : "#fef3c7",
+              padding: "4px 10px", borderRadius: "5px", alignSelf: "flex-start",
+              border: `1px solid ${estNageur ? "#a7f3d0" : "#fde68a"}`,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {utilisateur.role}
+          </span>
 
           {/* Navigation */}
           <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
             {menu.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to + label} to={to} end={to === "/"}
-                title={!sidebarOuverte ? label : undefined}
-                onClick={(e) => e.stopPropagation()}
+                onClick={() => { if (isMobile) fermerSidebar(); }}
                 style={({ isActive }) => ({
                   color: isActive ? "#0055FF" : "#64748b",
                   textDecoration: "none",
-                  padding: sidebarOuverte ? "11px 12px" : "12px",
+                  padding: "11px 12px",
                   borderRadius: "10px",
                   background: isActive ? "#eff6ff" : "transparent",
                   fontWeight: isActive ? 600 : 500,
                   fontSize: "14px",
                   display: "flex", alignItems: "center",
-                  justifyContent: sidebarOuverte ? "flex-start" : "center",
-                  gap: sidebarOuverte ? "12px" : "0",
+                  gap: "12px",
                   transition: "all 0.2s ease",
                   border: isActive ? "1px solid #dbeafe" : "1px solid transparent",
                   whiteSpace: "nowrap", overflow: "hidden",
                 })}
               >
                 <Icon size={18} strokeWidth={2.5} />
-                {sidebarOuverte && label}
+                {label}
               </NavLink>
             ))}
           </div>
 
           {/* Profil + déconnexion */}
           <div style={{ marginTop: "auto", paddingTop: "16px" }}>
-            {sidebarOuverte ? (
-              <div style={{ border: "1px solid #e2e8f0", borderRadius: "14px", overflow: "hidden", background: "#f8fafc" }}>
+            <div style={{ border: "1px solid #e2e8f0", borderRadius: "14px", overflow: "hidden", background: "#f8fafc" }}>
 
-                {/* Infos profil — cliquable → page profil */}
-                <NavLink
-                  to="/profil"
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ textDecoration: "none" }}
+              {/* Infos profil — cliquable → page profil */}
+              <NavLink
+                to="/profil"
+                onClick={() => { if (isMobile) fermerSidebar(); }}
+                style={{ textDecoration: "none" }}
+              >
+                <div
+                  style={{
+                    padding: "14px 14px 12px",
+                    display: "flex", alignItems: "center", gap: "10px",
+                    cursor: "pointer", transition: "background 0.15s",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "#EFF6FF"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
                 >
                   <div
                     style={{
-                      padding: "14px 14px 12px",
-                      display: "flex", alignItems: "center", gap: "10px",
-                      cursor: "pointer", transition: "background 0.15s",
+                      width: "36px", height: "36px", borderRadius: "50%",
+                      background: "linear-gradient(135deg, #0055FF, #06B6D4)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: "#fff", fontSize: "13px", fontWeight: 700,
+                      flexShrink: 0, letterSpacing: "0.02em",
                     }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "#EFF6FF"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
                   >
-                    <div
-                      style={{
-                        width: "36px", height: "36px", borderRadius: "50%",
-                        background: "linear-gradient(135deg, #0055FF, #06B6D4)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        color: "#fff", fontSize: "13px", fontWeight: 700,
-                        flexShrink: 0, letterSpacing: "0.02em",
-                      }}
-                    >
-                      {utilisateur.prenom?.[0]?.toUpperCase()}
-                      {utilisateur.nom?.[0]?.toUpperCase()}
+                    {utilisateur.prenom?.[0]?.toUpperCase()}
+                    {utilisateur.nom?.[0]?.toUpperCase()}
+                  </div>
+                  <div style={{ overflow: "hidden", flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: "13px", color: "#334155", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {utilisateur.prenom} {utilisateur.nom}
                     </div>
-                    <div style={{ overflow: "hidden", flex: 1 }}>
-                      <div style={{ fontWeight: 600, fontSize: "13px", color: "#334155", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {utilisateur.prenom} {utilisateur.nom}
-                      </div>
-                      <div style={{ fontSize: "11px", color: "#94a3b8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "2px" }}>
-                        {utilisateur.email}
-                      </div>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: "2px" }}>
+                      {utilisateur.email}
                     </div>
                   </div>
-                </NavLink>
+                </div>
+              </NavLink>
 
-                {/* Séparateur */}
-                <div style={{ height: "1px", background: "#e2e8f0" }} />
+              {/* Séparateur */}
+              <div style={{ height: "1px", background: "#e2e8f0" }} />
 
-                {/* Bouton déconnexion */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDeconnexion(); }}
-                  style={{
-                    width: "100%", padding: "10px 14px", background: "transparent",
-                    color: "#dc2626", border: "none", cursor: "pointer",
-                    fontSize: "13px", fontWeight: 600,
-                    display: "flex", alignItems: "center", gap: "8px",
-                    transition: "background 0.2s ease",
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "#fef2f2"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              {/* Bouton déconnexion */}
+              <button
+                onClick={onDeconnexion}
+                style={{
+                  width: "100%", padding: "10px 14px", background: "transparent",
+                  color: "#dc2626", border: "none", cursor: "pointer",
+                  fontSize: "13px", fontWeight: 600,
+                  display: "flex", alignItems: "center", gap: "8px",
+                  transition: "background 0.2s ease",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#fef2f2"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+              >
+                <LogOutIcon size={15} />
+                Déconnexion
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        {/* Sidebar réduite (desktop uniquement) */}
+        {!isMobile && !sidebarOuverte && (
+          <nav
+            onClick={() => setSidebarOuverte(true)}
+            style={{
+              width: "68px",
+              background: "#ffffff",
+              padding: "20px 10px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "4px",
+              flexShrink: 0,
+              borderRight: "1px solid #e5e7eb",
+              boxShadow: "2px 0 16px rgba(0,0,0,0.04)",
+              position: "fixed",
+              left: 0,
+              top: 0,
+              height: "100vh",
+              overflowY: "auto",
+              overflowX: "hidden",
+              zIndex: 200,
+              cursor: "pointer",
+            }}
+          >
+            {/* Logo/hamburger collapsed */}
+            <div
+              onMouseEnter={() => setLogoHover(true)}
+              onMouseLeave={() => setLogoHover(false)}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "8px", borderRadius: "8px", marginBottom: "8px",
+                transition: "background 0.2s ease",
+                background: logoHover ? "#f1f5f9" : "transparent",
+              }}
+            >
+              {logoHover ? (
+                <MenuIcon size={22} color="#64748b" strokeWidth={2} />
+              ) : (
+                <img src="/logo.png" alt="Swim AI" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+              )}
+            </div>
+
+            <div style={{ height: "1px", background: "#f1f5f9", margin: "0 0 12px" }} />
+
+            {/* Icônes menu */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+              {menu.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to + label} to={to} end={to === "/"}
+                  title={label}
+                  onClick={(e) => e.stopPropagation()}
+                  style={({ isActive }) => ({
+                    color: isActive ? "#0055FF" : "#64748b",
+                    textDecoration: "none",
+                    padding: "12px",
+                    borderRadius: "10px",
+                    background: isActive ? "#eff6ff" : "transparent",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all 0.2s ease",
+                    border: isActive ? "1px solid #dbeafe" : "1px solid transparent",
+                  })}
                 >
-                  <LogOutIcon size={15} />
-                  Déconnexion
-                </button>
-              </div>
-            ) : (
+                  <Icon size={18} strokeWidth={2.5} />
+                </NavLink>
+              ))}
+            </div>
+
+            {/* Bouton déco collapsed */}
+            <div style={{ marginTop: "auto", paddingTop: "16px" }}>
               <button
                 onClick={(e) => { e.stopPropagation(); onDeconnexion(); }}
                 title="Déconnexion"
@@ -315,38 +383,73 @@ function AppConnectee({
               >
                 <LogOutIcon size={16} />
               </button>
-            )}
-          </div>
-        </nav>
+            </div>
+          </nav>
+        )}
 
-        {/* Contenu */}
+        {/* Contenu principal */}
         <main
           style={{
-            marginLeft: sidebarOuverte ? "260px" : "68px",
-            flex: 1, padding: "32px",
+            marginLeft: isMobile ? 0 : sidebarOuverte ? "260px" : "68px",
+            flex: 1,
+            padding: isMobile ? "0" : "32px",
             background: theme.tertiary,
-            height: "100vh", overflowY: "auto",
+            height: "100vh",
+            overflowY: "auto",
             transition: "margin-left 0.3s ease",
           }}
         >
-          <Routes>
-            <Route path="/" element={<Dashboard utilisateur={utilisateur} />} />
-            {estEntraineur && <Route path="/nageurs" element={<Nageurs />} />}
-            <Route path="/sessions" element={<Sessions utilisateur={utilisateur} />} />
-            <Route path="/biometries" element={<Biometries utilisateur={utilisateur} />} />
-            <Route path="/performances" element={<Performances utilisateur={utilisateur} />} />
-            <Route path="/profil" element={<Profil utilisateur={utilisateur} />} />
-            <Route
-              path="*"
-              element={
-                <div style={{ textAlign: "center", padding: "80px", color: theme.texteDoux }}>
-                  <p style={{ fontSize: "48px" }}>🏊</p>
-                  <h2 style={{ marginTop: "16px", color: theme.neutral }}>Page introuvable</h2>
-                  <a href="/" style={{ color: theme.primary }}>Retour au dashboard</a>
-                </div>
-              }
-            />
-          </Routes>
+          {/* Barre de navigation mobile */}
+          {isMobile && (
+            <div
+              style={{
+                position: "sticky", top: 0, zIndex: 100,
+                background: "#ffffff",
+                borderBottom: "1px solid #e5e7eb",
+                padding: "12px 16px",
+                display: "flex", alignItems: "center", gap: "12px",
+                boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
+              }}
+            >
+              <button
+                onClick={() => setSidebarOuverte(true)}
+                style={{
+                  background: "transparent", border: "none", padding: "6px",
+                  cursor: "pointer", display: "flex", alignItems: "center",
+                  color: "#475569", borderRadius: "8px",
+                }}
+              >
+                <MenuIcon size={22} strokeWidth={2} color="currentColor" />
+              </button>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <img src="/logo.png" alt="Swim AI" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
+                <span style={{ fontFamily: theme.policeTitre, fontWeight: 700, fontSize: "16px", color: "#0f172a" }}>
+                  Swim AI
+                </span>
+              </div>
+            </div>
+          )}
+
+          <div style={{ padding: isMobile ? "16px" : "0" }}>
+            <Routes>
+              <Route path="/" element={<Dashboard utilisateur={utilisateur} />} />
+              {estEntraineur && <Route path="/nageurs" element={<Nageurs />} />}
+              <Route path="/sessions" element={<Sessions utilisateur={utilisateur} />} />
+              <Route path="/biometries" element={<Biometries utilisateur={utilisateur} />} />
+              <Route path="/performances" element={<Performances utilisateur={utilisateur} />} />
+              <Route path="/profil" element={<Profil utilisateur={utilisateur} />} />
+              <Route
+                path="*"
+                element={
+                  <div style={{ textAlign: "center", padding: isMobile ? "40px 16px" : "80px", color: theme.texteDoux }}>
+                    <p style={{ fontSize: "48px" }}>🏊</p>
+                    <h2 style={{ marginTop: "16px", color: theme.neutral }}>Page introuvable</h2>
+                    <a href="/" style={{ color: theme.primary }}>Retour au dashboard</a>
+                  </div>
+                }
+              />
+            </Routes>
+          </div>
         </main>
       </div>
     </BrowserRouter>

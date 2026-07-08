@@ -10,6 +10,7 @@ import {
   Calendar, ChevronDown, TrendingUp, TrendingDown,
   Minus, AlertTriangle, Activity, Moon, Zap, Heart,
 } from "lucide-react";
+import { useWindowWidth } from "../hooks/useWindowWidth";
 import theme from "../theme";
 
 interface DashboardProps { utilisateur: Utilisateur }
@@ -90,6 +91,20 @@ function KpiBlock({ titre, valeur, unite = "", delta = null, deltaSuffix = "", i
 
 function DashboardDetail({ dashboard }: { dashboard: DashboardResponse }) {
   const initiales = `${dashboard.nageur.prenom?.[0] ?? ""}${dashboard.nageur.nom?.[0] ?? ""}`.toUpperCase();
+  const isMobile = useWindowWidth() < 768;
+
+  // Années disponibles extraites des chronos
+  const anneesDisponibles = [...new Set(
+    dashboard.historique_chronos
+      .map(c => new Date(c.date).getFullYear())
+  )].sort((a, b) => b - a);
+
+  const anneeDefaut = anneesDisponibles[0] ?? new Date().getFullYear();
+  const [anneeSelectionnee, setAnneeSelectionnee] = useState<number>(anneeDefaut);
+
+  const chronosFiltres = dashboard.historique_chronos.filter(
+    c => new Date(c.date).getFullYear() === anneeSelectionnee
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -110,9 +125,21 @@ function DashboardDetail({ dashboard }: { dashboard: DashboardResponse }) {
             </p>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "8px 12px", fontSize: "13px", color: "#475569" }}>
+        {/* Sélecteur de saison fonctionnel */}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "8px", padding: "6px 10px", fontSize: "13px", color: "#475569" }}>
           <Calendar size={13} color="#94A3B8" />
-          <span>Saison 2025</span>
+          <select
+            value={anneeSelectionnee}
+            onChange={e => setAnneeSelectionnee(Number(e.target.value))}
+            style={{ border: "none", background: "transparent", fontSize: "13px", color: "#475569", fontWeight: 500, cursor: "pointer", outline: "none", appearance: "none", paddingRight: "4px" }}
+          >
+            {anneesDisponibles.length > 0
+              ? anneesDisponibles.map(a => (
+                  <option key={a} value={a}>Saison {a}</option>
+                ))
+              : <option value={anneeDefaut}>Saison {anneeDefaut}</option>
+            }
+          </select>
           <ChevronDown size={12} color="#94A3B8" />
         </div>
       </div>
@@ -128,19 +155,21 @@ function DashboardDetail({ dashboard }: { dashboard: DashboardResponse }) {
       </div>
 
       {/* Chronos + Charge */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "14px" }}>
         <Carte style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
             <SectionTitre>Évolution des performances</SectionTitre>
-            <select style={{ border: "1px solid #E2E8F0", borderRadius: "6px", fontSize: "12px", padding: "4px 8px", color: "#475569", background: "#F8FAFC" }}>
-              <option>100m nage libre</option>
-            </select>
+            {dashboard.nageur.specialite && (
+              <span style={{ fontSize: "12px", color: "#475569", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "6px", padding: "4px 10px", fontWeight: 500 }}>
+                {dashboard.nageur.specialite}
+              </span>
+            )}
           </div>
-          {dashboard.historique_chronos.length > 0 ? (
-            <ChronoChart data={dashboard.historique_chronos} />
+          {chronosFiltres.length > 0 ? (
+            <ChronoChart data={chronosFiltres} />
           ) : (
             <div style={{ height: "140px", display: "flex", alignItems: "center", justifyContent: "center", color: "#CBD5E1", fontSize: "13px", border: "1px dashed #E2E8F0", borderRadius: "8px" }}>
-              Aucune donnée disponible
+              Aucune donnée pour {anneeSelectionnee}
             </div>
           )}
         </Carte>

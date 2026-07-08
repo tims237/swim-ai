@@ -114,15 +114,27 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "max-age=31536000; includeSubDomains; preload"
             )
 
-        # Content Security Policy — limite les sources autorisées
-        reponse.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self'; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:; "
-            "connect-src 'self'; "
-            "frame-ancestors 'none';"
-        )
+        # Swagger UI et ReDoc chargent leurs assets depuis CDN — CSP assouplie pour ces routes
+        path = request.url.path
+        if path in ("/docs", "/redoc", "/openapi.json"):
+            reponse.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "img-src 'self' data: https://fastapi.tiangolo.com; "
+                "connect-src 'self'; "
+                "frame-ancestors 'none';"
+            )
+        else:
+            # Content Security Policy stricte pour toutes les autres routes
+            reponse.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self'; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data:; "
+                "connect-src 'self'; "
+                "frame-ancestors 'none';"
+            )
 
         # Supprime le header qui révèle la technologie utilisée
         if "server" in reponse.headers:

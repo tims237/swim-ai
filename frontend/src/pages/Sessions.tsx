@@ -1,4 +1,5 @@
 import { useState, FormEvent, useEffect } from 'react'
+import { useWindowWidth } from '../hooks/useWindowWidth'
 import { getSessions, creerSession, modifierSession, getNageurs } from '../api/api'
 import type { Session, Nageur, TypeSeance, Utilisateur } from '../types'
 import { Calendar, ChevronDown, Plus, X, Clock, Download, FileText, RotateCcw, Pencil } from 'lucide-react'
@@ -27,6 +28,7 @@ function telecharger(contenu: string, nomFichier: string, type: string) {
 function Sessions({ utilisateur }: { utilisateur: Utilisateur }) {
   const estNageur   = utilisateur.role === 'nageur'
   const monNageurId = utilisateur.nageur_id
+  const isMobile    = useWindowWidth() < 768
 
   const [sessions,          setSessions]          = useState<Session[]>([])
   const [nageurs,           setNageurs]           = useState<Nageur[]>([])
@@ -339,7 +341,7 @@ function Sessions({ utilisateur }: { utilisateur: Utilisateur }) {
         Génération de rapports personnalisés et historique des analyses
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 300px', gap: '20px', alignItems: 'start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
           {/* Rapports récents */}

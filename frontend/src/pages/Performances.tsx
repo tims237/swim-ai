@@ -1,4 +1,5 @@
 import { useState, FormEvent, useEffect } from 'react'
+import { useWindowWidth } from '../hooks/useWindowWidth'
 import { getNageurs, getSessionsNageur, getPerformancesNageur, creerPerformance } from '../api/api'
 import type { Nageur, Session, Performance, StyleNage, Utilisateur } from '../types'
 import { Calendar, ChevronDown, Plus, X, Timer, Zap, Target, TrendingUp, TrendingDown } from 'lucide-react'
@@ -18,6 +19,7 @@ const COULEURS_STYLE: Record<StyleNage, { bg: string; text: string }> = {
 function Performances({ utilisateur }: { utilisateur: Utilisateur }) {
   const estNageur   = utilisateur.role === 'nageur'
   const monNageurId = utilisateur.nageur_id
+  const isMobile    = useWindowWidth() < 768
 
   const [nageurs,      setNageurs]      = useState<Nageur[]>([])
   const [sessions,     setSessions]     = useState<Session[]>([])
@@ -203,7 +205,7 @@ function Performances({ utilisateur }: { utilisateur: Utilisateur }) {
       </div>
 
       {/* Tableau + Panneau droite */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '14px', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 320px', gap: '14px', alignItems: 'start' }}>
 
         {/* Tableau */}
         <Carte style={{ overflow: 'hidden' }}>
