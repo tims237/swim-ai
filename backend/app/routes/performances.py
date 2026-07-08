@@ -78,7 +78,7 @@ def creer_performance(
 @router.get("/", response_model=List[PerformanceResponse])
 def get_performances(
     skip: int = 0,
-    limit: int = 50,
+    limit: int = 500,
     db: Session = Depends(get_db),
     current_user: Utilisateur = Depends(get_current_user)
 ):
@@ -88,9 +88,9 @@ def get_performances(
     Un nageur ne voit que ses propres performances.
 
     - **skip** : nombre d'éléments à sauter (défaut : 0)
-    - **limit** : nombre maximum d'éléments retournés (défaut : 50, max : 100)
+    - **limit** : nombre maximum d'éléments retournés (défaut : 500, max : 1000)
     """
-    limit = min(limit, 100)
+    limit = min(limit, 1000)
 
     # Un nageur ne voit que ses propres performances
     if current_user.role == "nageur":

@@ -80,7 +80,7 @@ def creer_nageur(
 @router.get("/", response_model=List[NageurResponse])
 def get_nageurs(
     skip: int = 0,
-    limit: int = 50,
+    limit: int = 500,
     db: Session = Depends(get_db),
     current_user: Utilisateur = Depends(get_current_user)
 ):
@@ -89,10 +89,9 @@ def get_nageurs(
     Route protégée — token JWT requis.
 
     - **skip** : nombre d'éléments à sauter (défaut : 0)
-    - **limit** : nombre maximum d'éléments retournés (défaut : 50, max : 100)
+    - **limit** : nombre maximum d'éléments retournés (défaut : 500, max : 1000)
     """
-    # Plafonne le limit à 100 pour éviter les requêtes trop lourdes
-    limit = min(limit, 100)
+    limit = min(limit, 1000)
 
     # Un nageur ne voit que son propre profil
     if current_user.role == "nageur":
